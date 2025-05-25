@@ -16,8 +16,8 @@ public class ProductAttribute {
     private Long productId;
 
     @Column("nombre_atributo")
-    private String nombreAtributo;
+    private String attributeName;
 
     @Column("valor_atributo")
-    private String valorAtributo;
+    private String attributeValue;
 }

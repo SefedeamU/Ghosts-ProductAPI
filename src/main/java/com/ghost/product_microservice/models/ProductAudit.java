@@ -17,7 +17,7 @@ public class ProductAudit {
     @Column("product_id")
     private Long productId;
 
-    private String accion;
-    private String usuario;
-    private LocalDateTime fecha;
+    private String action;
+    private String user;
+    private LocalDateTime date;
 }

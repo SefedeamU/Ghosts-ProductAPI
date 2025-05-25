@@ -16,7 +16,7 @@ public class ProductImage {
     private Long productId;
 
     @Column("url_imagen")
-    private String urlImagen;
+    private String urlImg;
 
-    private Integer orden;
+    private Integer priority;
 }

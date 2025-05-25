@@ -1,20 +1,19 @@
 package com.ghost.product_microservice.models;
 
-import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.mapping.Column;
 
-@Data
-@Table("product_category")
-public class ProductCategory {
+import lombok.Data;
 
+@Data
+@Table("category_subcategory")
+public class SubCategory {
     @Id
     private Long id;
-
-    @Column("product_id")
-    private Long productId;
-
+    private String name;
+    private String description;
+    
     @Column("category_id")
-    private Long categoryId;
+    private Long category_id;
 }

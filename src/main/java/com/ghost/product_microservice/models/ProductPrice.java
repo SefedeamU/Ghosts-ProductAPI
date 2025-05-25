@@ -18,17 +18,17 @@ public class ProductPrice {
     @Column("product_id")
     private Long productId;
 
-    private BigDecimal precio;
+    private BigDecimal price;
 
     @Column("tipo_precio")
-    private String tipoPrecio;
+    private String kindOfPrice;
 
     @Column("fecha_inicio")
-    private LocalDateTime fechaInicio;
+    private LocalDateTime startDate;
 
     @Column("fecha_fin")
-    private LocalDateTime fechaFin;
+    private LocalDateTime endDate;
 
     @Column("fecha_creacion")
-    private LocalDateTime fechaCreacion;
+    private LocalDateTime creationAt;
 }

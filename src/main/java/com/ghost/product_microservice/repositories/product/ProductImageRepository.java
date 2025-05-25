@@ -5,5 +5,5 @@ import com.ghost.product_microservice.models.ProductImage;
 import reactor.core.publisher.Flux;
 
 public interface ProductImageRepository extends ReactiveCrudRepository<ProductImage, Long> {
-    Flux<ProductImage> findAllByProductId(Long productId);
+    Flux<ProductImage> findAllByProductsId(Long productsId);
 }

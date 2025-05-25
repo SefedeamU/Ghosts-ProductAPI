@@ -14,20 +14,26 @@ public class Product {
     @Id
     private Long id;
 
-    private String nombre;
-    private String descripcion;
+    private String name;
+    private String description;
     private Integer stock;
-    private String estado;
+    private String status;
+
+    @Column("category_id")
+    private long categoryId;
+
+    @Column("subcategory_id")
+    private Long subcategoryId;
 
     @Column("fecha_creacion")
-    private LocalDateTime fechaCreacion;
+    private LocalDateTime createdAt;
 
     @Column("fecha_modificacion")
-    private LocalDateTime fechaModificacion;
+    private LocalDateTime modificatedAt;
 
     @Column("creado_por")
-    private String creadoPor;
+    private String createdBy;
 
     @Column("modificado_por")
-    private String modificadoPor;
+    private String modificatedBy;
 }
