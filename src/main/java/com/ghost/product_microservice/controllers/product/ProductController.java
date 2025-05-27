@@ -83,7 +83,7 @@ public class ProductController {
         return productService.findProductByName(name);
     }
 
-    
+
     // This endpoint is for admin use only
     @GetMapping("/admin")
     public Flux<ProductDetailDTO> listProductsWithAdminDetails(
@@ -92,7 +92,7 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
-        return productService.findAllProductsWithAdminDetails();
+        return productService.findAllProductsWithAdminDetails(page, size);
     }
 
     @GetMapping("/admin/by-category/{categoryId}")
@@ -103,7 +103,7 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
-        return productService.findAllProductsWithAdminDetailsByCategory(categoryId);
+        return productService.findAllProductsWithAdminDetailsByCategory(categoryId, page, size);
     }
 
     @GetMapping("/admin/by-subcategory/{subCategoryId}")
@@ -114,7 +114,7 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
-        return productService.findAllProductsWithAdminDetailsBySubCategory(subCategoryId);
+        return productService.findAllProductsWithAdminDetailsBySubCategory(subCategoryId, page, size);
     }
     
 
@@ -124,7 +124,7 @@ public class ProductController {
     }
 
     @GetMapping("/admin/by-name/{name}")
-    public Mono<ProductDetailDTO> getProductsByName(@PathVariable String name) {
+    public Mono<ProductDetailDTO> WithAdminDetailsByName(@PathVariable String name) {
         return productService.findProductWithAdminDetailsByName(name);
     }
 

@@ -2,10 +2,10 @@ package com.ghost.product_microservice.controllers.dto.productdto;
 
 import java.util.List;
 
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductAttributeDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductImageDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductPriceDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails.ProductAttributeDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails.ProductDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails.ProductImageDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails.ProductPriceDTO;
 
 import lombok.Data;
 

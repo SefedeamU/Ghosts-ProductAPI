@@ -3,6 +3,9 @@ package com.ghost.product_microservice.models;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
+
+import io.micrometer.common.lang.Nullable;
+
 import org.springframework.data.relational.core.mapping.Column;
 
 import java.math.BigDecimal;
@@ -20,14 +23,18 @@ public class ProductPrice {
 
     private BigDecimal price;
 
-    @Column("tipo_precio")
-    private String kindOfPrice;
+    @Column("price_currency")
+    private String priceCurrency;
 
-    @Column("fecha_inicio")
+    @Column("start_date")
     private LocalDateTime startDate;
 
-    @Column("fecha_fin")
+    @Nullable
+    @Column("end_date")
     private LocalDateTime endDate;
+
+    @Column("is_active")
+    private Boolean isActive;
 
     @Column("fecha_creacion")
     private LocalDateTime creationAt;

@@ -3,6 +3,9 @@ package com.ghost.product_microservice.models;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
+
+import io.micrometer.common.lang.Nullable;
+
 import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.LocalDateTime;
@@ -29,6 +32,7 @@ public class Product {
     @Column("fecha_creacion")
     private LocalDateTime createdAt;
 
+    @Nullable
     @Column("fecha_modificacion")
     private LocalDateTime modificatedAt;
 

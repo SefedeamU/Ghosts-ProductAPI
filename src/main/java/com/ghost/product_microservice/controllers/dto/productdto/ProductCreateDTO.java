@@ -1,19 +1,21 @@
 package com.ghost.product_microservice.controllers.dto.productdto;
 
+
 import java.util.List;
 import java.util.Optional;
 
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductAttributeDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductImageDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductPriceDTO;
-import com.ghost.product_microservice.models.Product;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.create.PartialProductCreateDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.create.ProductCreateImageDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.create.ProductCreatePriceDTO;
+import com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails.ProductAttributeDTO;
 
 import lombok.Data;
 
 @Data
 public class ProductCreateDTO {
-    private Product product;
-    private Optional<List<ProductImageDTO>> images;
-    private ProductPriceDTO price;
+    
+    private PartialProductCreateDTO partialProductCreate;
+    private Optional<List<ProductCreateImageDTO>> images;
+    private ProductCreatePriceDTO price;
     private Optional<List<ProductAttributeDTO>> attributes;
 }

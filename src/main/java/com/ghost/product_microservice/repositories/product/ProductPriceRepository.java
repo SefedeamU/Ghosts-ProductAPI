@@ -6,7 +6,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface ProductPriceRepository extends ReactiveCrudRepository<ProductPrice, Long> {
-    Flux<ProductPrice> findAllByProductsId(Long productsId);
+    Flux<ProductPrice> findAllByProductId(Long productId);
     Mono <ProductPrice> findByProductId(Long productId);
-
+    Mono<ProductPrice> findByProductIdAndIsActiveTrue(Long productId);
+    Mono<Void> deleteAllByProductId(Long productId);
 }

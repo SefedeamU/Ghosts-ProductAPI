@@ -1,4 +1,4 @@
-package com.ghost.product_microservice.controllers.dto.productdto.internal;
+package com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails;
 
 import lombok.Data;
 

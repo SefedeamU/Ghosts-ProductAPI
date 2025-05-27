@@ -1,20 +1,27 @@
 package com.ghost.product_microservice.controllers.dto.productdto;
 
-import java.util.List;
-import java.util.Optional;
-
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductAttributeDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductImageDTO;
-import com.ghost.product_microservice.controllers.dto.productdto.internal.ProductPriceDTO;
+import java.math.BigDecimal;
 
 import lombok.Data;
 
 @Data
 public class ProductPatchDTO {
-    private Optional<ProductDTO> product;
-    private Optional<List<ProductImageDTO>> images;
-    private Optional<ProductPriceDTO> price;
-    private Optional<List<ProductAttributeDTO>> attributes;
-    private Optional<List<Long>> categoryIds;
+    private String user;
+    private String name;
+    private String brand;
+    private Long categoryId;
+    private Long subcategoryId;
+    private String description;
+    private Integer stock;
+    private String status;
+
+    private String urlImg;
+    private Integer priority;
+    private Long productId;
+
+    private BigDecimal price;
+    private String priceCurrency;
+
+    private String attributeName;
+    private String attributeValue;
 }

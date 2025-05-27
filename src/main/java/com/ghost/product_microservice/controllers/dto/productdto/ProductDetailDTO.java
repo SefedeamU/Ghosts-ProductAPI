@@ -14,7 +14,7 @@ import lombok.Data;
 public class ProductDetailDTO {
     private Product product;
     private List<ProductImage> images;
-    private List<ProductPrice> prices;
+    private ProductPrice price;
     private List<ProductAudit> audits;
     private List<ProductAttribute> attributes;
 }
