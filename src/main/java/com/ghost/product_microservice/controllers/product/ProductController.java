@@ -47,7 +47,7 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
-        return productService.findAllProducts();
+        return productService.findAllProducts(page, size);
     }
 
     @GetMapping("/by-category/{categoryId}")
@@ -58,7 +58,7 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
-        return productService.findAllProductsByCategory(categoryId);
+        return productService.findAllProductsByCategory(categoryId, page, size);
     }
 
     @GetMapping("/by-subcategory/{subCategoryId}")
@@ -69,7 +69,7 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
-        return productService.findAllProductsBySubCategory(subCategoryId);
+        return productService.findAllProductsBySubcategory(subCategoryId, page, size);
     }
     
 

@@ -18,6 +18,7 @@ public class Product {
     private String description;
     private Integer stock;
     private String status;
+    private String brand;
 
     @Column("category_id")
     private long categoryId;

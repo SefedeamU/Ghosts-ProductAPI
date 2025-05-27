@@ -6,4 +6,5 @@ import reactor.core.publisher.Flux;
 
 public interface ProductImageRepository extends ReactiveCrudRepository<ProductImage, Long> {
     Flux<ProductImage> findAllByProductsId(Long productsId);
+    Flux<ProductImage> findByProductId(Long productId);
 }

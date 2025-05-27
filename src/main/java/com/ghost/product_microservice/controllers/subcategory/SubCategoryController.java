@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryCreateDTO;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryDetailDTO;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryPatchDTO;
+import com.ghost.product_microservice.services.subcategory.SubCategoryService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
