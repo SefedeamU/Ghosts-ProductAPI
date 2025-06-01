@@ -1,9 +1,9 @@
-package com.ghost.product_microservice.controllers.dto.productdto.internal.finddetails;
+package com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto;
 
 import lombok.Data;
 
 @Data
-public class ProductDTO {
+public class GetProductDTO {
     private Long id;
     private String name;
     private String brand;
@@ -12,4 +12,6 @@ public class ProductDTO {
     private String description;
     private Integer stock;
     private String status;
+    private String createdBy;
+    private String modificatedBy;
 }

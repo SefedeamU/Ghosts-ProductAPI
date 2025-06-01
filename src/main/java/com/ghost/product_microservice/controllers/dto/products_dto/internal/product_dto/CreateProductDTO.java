@@ -1,10 +1,9 @@
-package com.ghost.product_microservice.controllers.dto.productdto.internal.create;
+package com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto;
 
 import lombok.Data;
 
 @Data
-public class PartialProductCreateDTO {
-    private String user;
+public class CreateProductDTO {
     private String name;
     private String brand;
     private Long categoryId;
@@ -12,4 +11,5 @@ public class PartialProductCreateDTO {
     private String description;
     private Integer stock;
     private String status;
+    private String user;
 }

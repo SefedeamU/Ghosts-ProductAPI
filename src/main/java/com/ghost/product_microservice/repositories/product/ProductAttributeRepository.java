@@ -9,4 +9,5 @@ import reactor.core.publisher.Mono;
 public interface ProductAttributeRepository extends ReactiveCrudRepository<ProductAttribute, Long> {
     Flux<ProductAttribute> findAllByProductId(Long productId);
     Mono<Void> deleteAllByProductId(Long productId);
+    Mono<ProductAttribute> findByProductIdAndAttributeName(Long productId, String attributeName);
 }

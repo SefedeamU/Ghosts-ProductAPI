@@ -19,5 +19,8 @@ public class ProductAudit {
 
     private String action;
     private String user;
+    private String entity;
+    private String details;
+    private String ipAddress;
     private LocalDateTime date;
 }

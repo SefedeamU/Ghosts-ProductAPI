@@ -8,4 +8,5 @@ import reactor.core.publisher.Mono;
 public interface ProductImageRepository extends ReactiveCrudRepository<ProductImage, Long> {
     Flux<ProductImage> findAllByProductId(Long productId);
     Mono<Void> deleteAllByProductId(Long productId);
+    Mono<ProductImage> findByProductIdAndPriority(Long productId, Integer priority);
 }
