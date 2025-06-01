@@ -8,10 +8,8 @@ import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductP
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_attribute_dto.GetProductAttributeDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto.GetProductDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto.PatchProductDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_image_dto.CreateProductImageDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_image_dto.GetProductImageDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_price_dto.GetProductPriceDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_price_dto.PatchProductPriceDTO;
 import com.ghost.product_microservice.models.Product;
 import com.ghost.product_microservice.models.ProductAttribute;
 import com.ghost.product_microservice.models.ProductAudit;
@@ -28,7 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -42,18 +40,31 @@ public class ProductService {
     private final ProductAuditRepository productAuditRepository;
     private final ProductAttributeRepository productAttributeRepository;
 
+    private final ProductAttributeService productAttributeService;
+    private final ProductImageService productImageService;
+    private final ProductPriceService productPriceService;
+
     public ProductService(ProductRepository productRepository,
                         ProductPriceRepository productPriceRepository,
                         ProductImageRepository prodcutImageRepository,
                         ProductAuditRepository productAuditRepository,
-                        ProductAttributeRepository productAttributeRepository)
+                        ProductAttributeRepository productAttributeRepository,
+
+                        ProductAttributeService productAttributeService,
+                        ProductImageService productImageService,
+                        ProductPriceService productPriceService)
     {
         this.productRepository = productRepository;
         this.productPriceRepository = productPriceRepository;
         this.productImageRepository = prodcutImageRepository;
         this.productAuditRepository = productAuditRepository;
         this.productAttributeRepository = productAttributeRepository;
+
+        this.productAttributeService = productAttributeService;
+        this.productImageService = productImageService;
+        this.productPriceService = productPriceService;
     }
+
     private Mono<Void> logAudit(Long productId, String action, String user, String details, String ipAddress) {
         ProductAudit audit = new ProductAudit();
         audit.setProductId(productId);
@@ -67,7 +78,6 @@ public class ProductService {
     }
 
     //Public methods to retrieve products with pagination and details
-
     public Flux<FinalProductPartialDetailDTO> findAllProducts(int page, int size) {
         return productRepository.findAll()
             .skip((long) page*size)
@@ -733,7 +743,7 @@ public class ProductService {
             });
     }
 
-    public Mono<FinalProductDetailDTO> createProduct(FinalProductCreateDTO dto, String deletedByUser, String ip) {
+    public Mono<FinalProductDetailDTO> createProduct(FinalProductCreateDTO dto, String createdByUser, String ip) {
         Product product = new Product();
         product.setName(dto.getProduct().getName());
         product.setBrand(dto.getProduct().getBrand());
@@ -749,166 +759,75 @@ public class ProductService {
 
         return productRepository.save(product)
             .flatMap(savedProduct -> {
-                Mono<Void> saveAttributes = Mono.empty();
-                if (dto.getAttributes().isPresent()) {
-                    saveAttributes = Flux.fromIterable(dto.getAttributes().get())
-                        .map(attrDto -> {
-                            ProductAttribute attribute = new ProductAttribute();
-                            attribute.setProductId(savedProduct.getId());
-                            attribute.setAttributeName(attrDto.getAttributeName());
-                            attribute.setAttributeValue(attrDto.getAttributeValue());
-                            return attribute;
-                        })
-                        .flatMap(productAttributeRepository::save)
-                        .then();
-                }
+                Mono<Void> saveAttributes = productAttributeService.createAttributes(
+                    savedProduct.getId(),
+                    dto.getAttributes().orElse(Collections.emptyList()),
+                    createdByUser,
+                    ip
+                );
 
-                Mono<Void> saveImages = Mono.fromRunnable(() -> {})
-                    .then(Mono.defer(() -> {
-                        List<ProductImage> images = new ArrayList<>();
-                        List<Integer> usedPriorities = new ArrayList<>();
-                        if (dto.getImages().isPresent()) {
-                            List<CreateProductImageDTO> imageDTOs = dto.getImages().get();
-                            if (imageDTOs.size() > 5) {
-                                throw new IllegalArgumentException("Images cannot exceed 5.");
-                            }
-                            for (CreateProductImageDTO createImageDTO : imageDTOs) {
-                                ProductImage image = new ProductImage();
-                                image.setUrlImg(createImageDTO.getUrlImg());
-                                image.setPriority(createImageDTO.getPriority());
-                                image.setProductId(savedProduct.getId());
-                                images.add(image);
-                                usedPriorities.add(createImageDTO.getPriority());
-                            }
-                        }
-                        String genericUrl = "https://example.com/generic-image.jpg";
-                        for (int i = 1; i <= 5; i++) {
-                            if (!usedPriorities.contains(i)) {
-                                ProductImage image = new ProductImage();
-                                image.setUrlImg(genericUrl);
-                                image.setPriority(i);
-                                image.setProductId(savedProduct.getId());
-                                images.add(image);
-                            }
-                        }
-                        return Flux.fromIterable(images)
-                            .flatMap(productImageRepository::save)
-                            .then();
-                    }));
+                Mono<Void> saveImages = productImageService.createImages(
+                    savedProduct.getId(),
+                    dto.getImages().orElse(Collections.emptyList()),
+                    createdByUser,
+                    ip
+                );
 
-                Mono<Void> savePrice = Mono.defer(() -> {
-                    ProductPrice price = new ProductPrice();
-                    price.setPrice(dto.getPrice().getPrice());
-                    price.setPriceCurrency(dto.getPrice().getPriceCurrency());
-                    price.setStartDate(LocalDateTime.now());
-                    price.setCreationAt(LocalDateTime.now());
-                    price.setProductId(savedProduct.getId());
-                    price.setIsActive(true);
-                    price.setEndDate(null);
-                    return productPriceRepository.save(price).then();
-                });
+                Mono<Void> savePrice = productPriceService.createPrice(
+                    savedProduct.getId(),
+                    dto.getPrice(),
+                    createdByUser,
+                    ip
+                ).then();
 
                 return Mono.when(saveAttributes, saveImages, savePrice)
-                .then(logAudit(savedProduct.getId(), "CREATE", savedProduct.getCreatedBy(), "Product created", ip))
-                .then(findProductWithAdminDetailsById(savedProduct.getId()));
+                    .then(logAudit(savedProduct.getId(), "CREATE", savedProduct.getCreatedBy(), "Product created", ip))
+                    .then(findProductWithAdminDetailsById(savedProduct.getId()));
             });
     }
 
-    public Mono<FinalProductDetailDTO> updateProductById(Long id, FinalProductCreateDTO dto, String deletedByUser, String ip) {
+    public Mono<FinalProductDetailDTO> updateProductById(Long id, FinalProductCreateDTO dto, String updatedByUser, String ip) {
         return productRepository.findById(id)
             .flatMap(existingProduct -> {
-            existingProduct.setName(dto.getProduct().getName());
-            existingProduct.setBrand(dto.getProduct().getBrand());
-            existingProduct.setCategoryId(dto.getProduct().getCategoryId());
-            existingProduct.setSubcategoryId(dto.getProduct().getSubcategoryId());
-            existingProduct.setDescription(dto.getProduct().getDescription());
-            existingProduct.setStock(dto.getProduct().getStock());
-            existingProduct.setStatus(dto.getProduct().getStatus());
-            existingProduct.setModificatedAt(LocalDateTime.now());
-            existingProduct.setModificatedBy(dto.getProduct().getUser());
+                existingProduct.setName(dto.getProduct().getName());
+                existingProduct.setBrand(dto.getProduct().getBrand());
+                existingProduct.setCategoryId(dto.getProduct().getCategoryId());
+                existingProduct.setSubcategoryId(dto.getProduct().getSubcategoryId());
+                existingProduct.setDescription(dto.getProduct().getDescription());
+                existingProduct.setStock(dto.getProduct().getStock());
+                existingProduct.setStatus(dto.getProduct().getStatus());
+                existingProduct.setModificatedAt(LocalDateTime.now());
+                existingProduct.setModificatedBy(dto.getProduct().getUser());
 
-            return productRepository.save(existingProduct)
-            .flatMap(savedProduct -> {
-                Mono<Void> replaceAttributes = productAttributeRepository.deleteAllByProductId(id)
-                    .thenMany(
-                        dto.getAttributes().isPresent() ? Flux.fromIterable(dto.getAttributes().get())
-                        .map(attrDto -> {
-                            ProductAttribute attr = new ProductAttribute();
-                            attr.setProductId(id);
-                            attr.setAttributeName(attrDto.getAttributeName());
-                            attr.setAttributeValue(attrDto.getAttributeValue());
-                            return attr;
-                        })
-                            .collectList()
-                            .flatMapMany(Flux::fromIterable)
-                            .flatMap(productAttributeRepository::save): Flux.empty()
-                            )
-                .then();
+                return productRepository.save(existingProduct)
+                    .flatMap(savedProduct -> {
+                        Mono<Void> replaceAttributes = productAttributeService.replaceAttributes(
+                            id,
+                            dto.getAttributes().orElse(Collections.emptyList()),
+                            updatedByUser,
+                            ip
+                        );
+                        Mono<Void> replaceImages = productImageService.replaceImages(
+                            id,
+                            dto.getImages().orElse(Collections.emptyList()),
+                            updatedByUser,
+                            ip
+                        );
+                        Mono<Void> replacePrice = productPriceService.updatePrice(
+                            id,
+                            dto.getPrice(),
+                            updatedByUser,
+                            ip
+                        ).then();
 
-                Mono<Void> replaceImages = productImageRepository.deleteAllByProductId(id)
-                    .thenMany(
-                        dto.getImages().isPresent() ?
-                            Mono.fromCallable(() -> {
-                                List<ProductImage> images = new ArrayList<>();
-                                List<Integer> usedPriorities = new ArrayList<>();
-                                List<CreateProductImageDTO> imageDTOs = dto.getImages().get();
-                                if (imageDTOs.size() > 5) {
-                                    throw new IllegalArgumentException("Images cannot exceed 5.");
-                                }
-                                for (CreateProductImageDTO imgDto : imageDTOs) {
-                                    ProductImage img = new ProductImage();
-                                    img.setProductId(id);
-                                    img.setUrlImg(imgDto.getUrlImg());
-                                    img.setPriority(imgDto.getPriority());
-                                    images.add(img);
-                                    usedPriorities.add(imgDto.getPriority());
-                                }
-                                if (imageDTOs.size() < 5) {
-                                    String genericUrl = "https://example.com/generic-image.jpg";
-                                    for (int i = 1; i <= 5; i++) {
-                                        if (!usedPriorities.contains(i)) {
-                                            ProductImage img = new ProductImage();
-                                            img.setProductId(id);
-                                            img.setUrlImg(genericUrl);
-                                            img.setPriority(i);
-                                            images.add(img);
-                                        }
-                                    }
-                                }
-                            return images;
-                        })
-                .flatMapMany(Flux::fromIterable)
-                .flatMap(productImageRepository::save): Flux.empty()
-                )
-                .then();
-
-                Mono<Void> replacePrice = productPriceRepository.findByProductIdAndIsActiveTrue(id)
-                    .flatMap(oldPrice -> {
-                            oldPrice.setIsActive(false);
-                            oldPrice.setEndDate(LocalDateTime.now());
-                        return productPriceRepository.save(oldPrice);
-                    })
-                    .then(Mono.defer(() -> {
-                            ProductPrice price = new ProductPrice();
-                            price.setProductId(id);
-                            price.setPrice(dto.getPrice().getPrice());
-                            price.setPriceCurrency(dto.getPrice().getPriceCurrency());
-                            price.setStartDate(LocalDateTime.now());
-                            price.setCreationAt(LocalDateTime.now());
-                            price.setIsActive(true);
-                            price.setEndDate(null);
-                        return productPriceRepository.save(price);
-                    }))
-                .then();
-
-                return Mono.when(replaceAttributes, replaceImages, replacePrice)
-                .then(logAudit(savedProduct.getId(), "PUT", savedProduct.getCreatedBy(), "Update product", ip))
-                .then(findProductWithAdminDetailsById(id));
+                        return Mono.when(replaceAttributes, replaceImages, replacePrice)
+                            .then(logAudit(savedProduct.getId(), "PUT", savedProduct.getModificatedBy(), "Update product", ip))
+                            .then(findProductWithAdminDetailsById(id));
+                    });
             });
-        });
     }
 
-    public Mono<FinalProductDetailDTO> patchProductById(Long id, FinalProductPatchDTO dto, String deletedByUser, String ip) {
+    public Mono<FinalProductDetailDTO> patchProductById(Long id, FinalProductPatchDTO dto, String updatedByUser, String ip) {
         return productRepository.findById(id)
             .flatMap(product -> {
                 PatchProductDTO patch = dto.getProduct();
@@ -922,62 +841,34 @@ public class ProductService {
                     if (patch.getStatus() != null) product.setStatus(patch.getStatus());
                     if (patch.getUser() != null) product.setModificatedBy(patch.getUser());
                 }
-                product.setModificatedAt(java.time.LocalDateTime.now());
+                product.setModificatedAt(LocalDateTime.now());
 
                 return productRepository.save(product)
                     .flatMap(savedProduct -> {
-
-                        Mono<Void> patchImages = Mono.empty();
-                        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
-                            patchImages = Flux.fromIterable(dto.getImages())
-                                .flatMap(imgDto ->
-                                    productImageRepository.findByProductIdAndPriority(savedProduct.getId(), imgDto.getPriority())
-                                        .flatMap(existingImage -> {
-                                            existingImage.setUrlImg(imgDto.getUrlImg());
-                                            return productImageRepository.save(existingImage);
-                                        })
-                                )
-                                .then();
-                        }
-
-                        Mono<Void> patchAttributes = Mono.empty();
-                        if (dto.getAttributes() != null && !dto.getAttributes().isEmpty()) {
-                            patchAttributes = Flux.fromIterable(dto.getAttributes())
-                                .flatMap(attrDto ->
-                                    productAttributeRepository.findByProductIdAndAttributeName(savedProduct.getId(), attrDto.getAttributeName())
-                                        .flatMap(existingAttr -> {
-                                            existingAttr.setAttributeValue(attrDto.getAttributeValue());
-                                            return productAttributeRepository.save(existingAttr);
-                                        })
-                                )
-                                .then();
-                        }
-
+                        Mono<Void> patchAttributes = productAttributeService.patchAttributes(
+                            savedProduct.getId(),
+                            dto.getAttributes(),
+                            updatedByUser,
+                            ip
+                        );
+                        Mono<Void> patchImages = productImageService.patchImages(
+                            savedProduct.getId(),
+                            dto.getImages(),
+                            updatedByUser,
+                            ip
+                        );
                         Mono<Void> patchPrice = Mono.empty();
-                        PatchProductPriceDTO patchPriceDTO = dto.getPrice();
-                        if (patchPriceDTO != null && patchPriceDTO.getPrice() != null && patchPriceDTO.getPriceCurrency() != null) {
-                            patchPrice = productPriceRepository.findByProductIdAndIsActiveTrue(savedProduct.getId())
-                                .flatMap(oldPrice -> {
-                                    oldPrice.setIsActive(false);
-                                    oldPrice.setEndDate(java.time.LocalDateTime.now());
-                                    return productPriceRepository.save(oldPrice);
-                                })
-                                .then(Mono.defer(() -> {
-                                    ProductPrice price = new ProductPrice();
-                                    price.setProductId(savedProduct.getId());
-                                    price.setPrice(patchPriceDTO.getPrice());
-                                    price.setPriceCurrency(patchPriceDTO.getPriceCurrency());
-                                    price.setStartDate(java.time.LocalDateTime.now());
-                                    price.setCreationAt(java.time.LocalDateTime.now());
-                                    price.setIsActive(true);
-                                    price.setEndDate(null);
-                                    return productPriceRepository.save(price);
-                                }))
-                                .then();
+                        if (dto.getPrice() != null) {
+                            patchPrice = productPriceService.updatePrice(
+                                savedProduct.getId(),
+                                dto.getPrice(),
+                                updatedByUser,
+                                ip
+                            ).then();
                         }
 
-                        return Mono.when(patchImages, patchAttributes, patchPrice)
-                            .then(logAudit(savedProduct.getId(), "PATCH", savedProduct.getCreatedBy(), "Partial update product", ip))
+                        return Mono.when(patchAttributes, patchImages, patchPrice)
+                            .then(logAudit(savedProduct.getId(), "PATCH", savedProduct.getModificatedBy(), "Partial update product", ip))
                             .then(findProductWithAdminDetailsById(savedProduct.getId()));
                     });
             });
@@ -987,13 +878,14 @@ public class ProductService {
         return findProductWithAdminDetailsById(id)
             .flatMap(productDetail ->
                 Mono.when(
-                    productAttributeRepository.deleteAllByProductId(id),
-                    productImageRepository.deleteAllByProductId(id),
-                    productPriceRepository.deleteAllByProductId(id)
+                    productAttributeService.deleteAttributes(id, deletedByUser, ip),
+                    productImageService.deleteImages(id, deletedByUser, ip),
+                    productPriceService.deleteAllPrices(id, deletedByUser, ip)
                 )
                 .then(productRepository.deleteById(id))
                 .then(logAudit(productDetail.getProduct().getId(), "DELETE", deletedByUser, "Delete product", ip))
                 .thenReturn(productDetail)
             );
     }
+
 }

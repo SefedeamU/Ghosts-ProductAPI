@@ -1,32 +1,17 @@
 package com.ghost.product_microservice.services.product;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductCreateDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductDetailDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductPartialDetailDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductPatchDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_attribute_dto.GetProductAttributeDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto.GetProductDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_image_dto.CreateProductImageDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_image_dto.GetProductImageDTO;
-import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_price_dto.GetProductPriceDTO;
-import com.ghost.product_microservice.models.Product;
-import com.ghost.product_microservice.models.ProductAttribute;
-import com.ghost.product_microservice.models.ProductAudit;
-import com.ghost.product_microservice.models.ProductImage;
-import com.ghost.product_microservice.models.ProductPrice;
-import com.ghost.product_microservice.repositories.product.ProductAttributeRepository;
-import com.ghost.product_microservice.repositories.product.ProductAuditRepository;
-import com.ghost.product_microservice.repositories.product.ProductImageRepository;
-import com.ghost.product_microservice.repositories.product.ProductPriceRepository;
-import com.ghost.product_microservice.repositories.product.ProductRepository;
+import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_price_dto.CreateProductPriceDTO;
 
-import reactor.core.publisher.Flux;
+import com.ghost.product_microservice.models.ProductAudit;
+import com.ghost.product_microservice.models.ProductPrice;
+
+import com.ghost.product_microservice.repositories.product.ProductAuditRepository;
+import com.ghost.product_microservice.repositories.product.ProductPriceRepository;
+
 import reactor.core.publisher.Mono;
 
 @Service
@@ -41,7 +26,6 @@ public class ProductPriceService {
         this.productAuditRepository = productAuditRepository;
     }
 
-    // Crear un nuevo precio para un producto (desactiva el anterior si existe)
     public Mono<ProductPrice> createPrice(Long productId, CreateProductPriceDTO dto, String user, String ip) {
         return productPriceRepository.findByProductIdAndIsActiveTrue(productId)
             .flatMap(oldPrice -> {
@@ -63,8 +47,7 @@ public class ProductPriceService {
             }));
     }
 
-    // Actualizar el precio activo de un producto (crea uno nuevo y desactiva el anterior)
-    public Mono<ProductPrice> updatePrice(Long productId, ProductCreatePriceDTO dto, String user, String ip) {
+    public Mono<ProductPrice> updatePrice(Long productId, CreateProductPriceDTO dto, String user, String ip) {
         return productPriceRepository.findByProductIdAndIsActiveTrue(productId)
             .flatMap(oldPrice -> {
                 oldPrice.setIsActive(false);
@@ -85,23 +68,11 @@ public class ProductPriceService {
             }));
     }
 
-    // Obtener el precio activo de un producto
-    public Mono<ProductPrice> getActivePrice(Long productId) {
-        return productPriceRepository.findByProductIdAndIsActiveTrue(productId);
-    }
-
-    // Obtener todos los precios (histórico) de un producto
-    public Flux<ProductPrice> getAllPrices(Long productId) {
-        return productPriceRepository.findAllByProductId(productId);
-    }
-
-    // Eliminar todos los precios de un producto
     public Mono<Void> deleteAllPrices(Long productId, String user, String ip) {
         return productPriceRepository.deleteAllByProductId(productId)
             .then(logAudit(productId, "DELETE", user, "Delete all prices", ip));
     }
 
-    // Auditoría
     private Mono<Void> logAudit(Long productId, String action, String user, String details, String ipAddress) {
         ProductAudit audit = new ProductAudit();
         audit.setProductId(productId);
