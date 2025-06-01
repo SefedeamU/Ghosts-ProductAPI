@@ -1,4 +1,4 @@
-package com.ghost.product_microservice.repositories.product;
+package com.ghost.product_microservice.repositories.product_repository;
 
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 

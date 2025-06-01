@@ -1,4 +1,4 @@
-package com.ghost.product_microservice.services.product;
+package com.ghost.product_microservice.services.product_service;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,8 +9,8 @@ import com.ghost.product_microservice.controllers.dto.products_dto.internal.prod
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_attribute_dto.PatchProductAttributeDTO;
 import com.ghost.product_microservice.models.ProductAttribute;
 import com.ghost.product_microservice.models.ProductAudit;
-import com.ghost.product_microservice.repositories.product.ProductAttributeRepository;
-import com.ghost.product_microservice.repositories.product.ProductAuditRepository;
+import com.ghost.product_microservice.repositories.product_repository.ProductAttributeRepository;
+import com.ghost.product_microservice.repositories.product_repository.ProductAuditRepository;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

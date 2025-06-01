@@ -1,4 +1,4 @@
-package com.ghost.product_microservice.controllers.product;
+package com.ghost.product_microservice.controllers.product_controller;
 
 
 import reactor.core.publisher.Flux;
@@ -25,7 +25,7 @@ import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductC
 import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductDetailDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductPartialDetailDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductPatchDTO;
-import com.ghost.product_microservice.services.product.ProductService;
+import com.ghost.product_microservice.services.product_service.ProductService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -134,13 +134,13 @@ public class ProductController {
     public Mono<FinalProductDetailDTO> postProduct(
         @RequestBody FinalProductCreateDTO dto,
         HttpServletRequest request,
-        @RequestBody String deletedByUser) {
+        @RequestBody String user) {
 
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null) {
             ip = request.getRemoteAddr();
         }
-        return productService.createProduct(dto, deletedByUser, ip);
+        return productService.createProduct(dto, user, ip);
     }
 
     @PutMapping("/admin/{id}")
@@ -148,13 +148,13 @@ public class ProductController {
         @PathVariable Long id, 
         @RequestBody FinalProductCreateDTO product,
         HttpServletRequest request,
-        @RequestBody String deletedByUser) {
+        @RequestBody String user) {
 
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null) {
             ip = request.getRemoteAddr();
         }
-        return productService.updateProductById(id, product, deletedByUser, ip);
+        return productService.updateProductById(id, product, user, ip);
     }
 
     @PatchMapping("/admin/{id}")
@@ -162,13 +162,13 @@ public class ProductController {
         @PathVariable Long id, 
         @RequestBody FinalProductPatchDTO product,
         HttpServletRequest request,
-        @RequestBody String deletedByUser) {
+        @RequestBody String user) {
 
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null) {
             ip = request.getRemoteAddr();
         }
-        return productService.patchProductById(id, product, deletedByUser, ip);
+        return productService.patchProductById(id, product, user, ip);
     }
 
     @DeleteMapping("/admin/{id}")
@@ -176,13 +176,13 @@ public class ProductController {
     public Mono<FinalProductDetailDTO> deleteProduct(
         @PathVariable Long id,
         HttpServletRequest request,
-        @RequestBody String deletedByUser) {
+        @RequestBody String user) {
 
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null) {
             ip = request.getRemoteAddr();
         }
 
-        return productService.deleteProductById(id, deletedByUser, ip);
+        return productService.deleteProductById(id, user, ip);
     }
 }

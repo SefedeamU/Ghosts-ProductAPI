@@ -1,4 +1,4 @@
-package com.ghost.product_microservice.services.product;
+package com.ghost.product_microservice.services.product_service;
 
 
 import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductCreateDTO;
@@ -15,12 +15,11 @@ import com.ghost.product_microservice.models.ProductAttribute;
 import com.ghost.product_microservice.models.ProductAudit;
 import com.ghost.product_microservice.models.ProductImage;
 import com.ghost.product_microservice.models.ProductPrice;
-import com.ghost.product_microservice.repositories.product.ProductAttributeRepository;
-import com.ghost.product_microservice.repositories.product.ProductAuditRepository;
-import com.ghost.product_microservice.repositories.product.ProductPriceRepository;
-import com.ghost.product_microservice.repositories.product.ProductRepository;
-import com.ghost.product_microservice.repositories.product.ProductImageRepository;
-
+import com.ghost.product_microservice.repositories.product_repository.ProductAttributeRepository;
+import com.ghost.product_microservice.repositories.product_repository.ProductAuditRepository;
+import com.ghost.product_microservice.repositories.product_repository.ProductImageRepository;
+import com.ghost.product_microservice.repositories.product_repository.ProductPriceRepository;
+import com.ghost.product_microservice.repositories.product_repository.ProductRepository;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -781,7 +780,7 @@ public class ProductService {
                 ).then();
 
                 return Mono.when(saveAttributes, saveImages, savePrice)
-                    .then(logAudit(savedProduct.getId(), "CREATE", savedProduct.getCreatedBy(), "Product created", ip))
+                    .then(logAudit(savedProduct.getId(), "POST", savedProduct.getCreatedBy(), "Product created", ip))
                     .then(findProductWithAdminDetailsById(savedProduct.getId()));
             });
     }

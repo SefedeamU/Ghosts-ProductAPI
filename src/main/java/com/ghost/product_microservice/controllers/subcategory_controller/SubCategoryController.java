@@ -1,4 +1,4 @@
-package com.ghost.product_microservice.controllers.subcategory;
+package com.ghost.product_microservice.controllers.subcategory_controller;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryCreateDTO;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryDetailDTO;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryPatchDTO;
-import com.ghost.product_microservice.services.subcategory.SubCategoryService;
+import com.ghost.product_microservice.services.subcategory_service.SubCategoryService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
