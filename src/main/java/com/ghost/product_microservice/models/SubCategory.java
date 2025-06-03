@@ -15,5 +15,5 @@ public class SubCategory {
     private String description;
     
     @Column("category_id")
-    private Long category_id;
+    private Long categoryId;
 }

@@ -6,4 +6,5 @@ import lombok.Data;
 public class SubCategoryPatchDTO {
     private String name;
     private String description;
+    private Long categoryId;
 }

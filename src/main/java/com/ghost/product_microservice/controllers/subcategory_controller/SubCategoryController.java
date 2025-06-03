@@ -11,11 +11,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.util.StringUtils;
+
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryCreateDTO;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryDetailDTO;
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryPatchDTO;
 import com.ghost.product_microservice.services.subcategory_service.SubCategoryService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -29,38 +33,94 @@ public class SubCategoryController {
         this.subCategoryService = subCategoryService;
     }
 
+    // Utilidad para extraer y validar IP
+    private String extractClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (!StringUtils.hasText(ip)) {
+            throw new IllegalArgumentException("Client IP address not found in X-Forwarded-For header");
+        }
+        return ip;
+    }
+
     @GetMapping
     public Flux<SubCategoryDetailDTO> listSubCategoriesByCategory(@RequestParam Long categoryId) {
+        if (categoryId == null || categoryId <= 0) throw new IllegalArgumentException("categoryId must be positive");
         return subCategoryService.findAllSubCategoriesByCategory(categoryId);
     }
 
     @GetMapping("/{id}")
     public Mono<SubCategoryDetailDTO> getSubCategoryById(@PathVariable Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         return subCategoryService.findSubCategoryById(id);
     }
 
     @GetMapping("/by-name/{name}")
     public Mono<SubCategoryDetailDTO> getSubCategoryByName(@PathVariable String name) {
+        if (!StringUtils.hasText(name)) throw new IllegalArgumentException("name is required");
         return subCategoryService.findSubCategoryByName(name);
     }
 
     @PostMapping
-    public Mono<SubCategoryDetailDTO> postSubCategory(@RequestBody SubCategoryCreateDTO subCategoryDTO) {
-        return subCategoryService.createSubCategory(subCategoryDTO.getCategoryId(), subCategoryDTO);
+    public Mono<SubCategoryDetailDTO> postSubCategory(
+        @Valid @RequestBody SubCategoryCreateDTO subCategoryDTO,
+        HttpServletRequest request,
+        @RequestBody String user){
+
+        String ip = extractClientIp(request);
+        if (subCategoryDTO == null) throw new IllegalArgumentException("SubCategory data is required");
+        if (subCategoryDTO.getCategoryId() == null || subCategoryDTO.getCategoryId() <= 0)
+            throw new IllegalArgumentException("categoryId must be positive");
+        if (!StringUtils.hasText(subCategoryDTO.getName()))
+            throw new IllegalArgumentException("name is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
+
+        return subCategoryService.createSubCategory(subCategoryDTO.getCategoryId(), subCategoryDTO, user, ip);
     }
-    
+
     @PutMapping("/{id}")
-    public Mono<SubCategoryCreateDTO> updateSubCategory(@PathVariable Long id, @RequestBody SubCategoryCreateDTO subCategoryDTO) {
-        return subCategoryService.updateSubCategoryById(id, subCategoryDTO);
+    public Mono<SubCategoryDetailDTO> updateSubCategory(
+        @PathVariable Long id,
+        @Valid @RequestBody SubCategoryCreateDTO subCategoryDTO,
+        HttpServletRequest request,
+        @RequestBody String user) {
+
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (subCategoryDTO == null) throw new IllegalArgumentException("SubCategory data is required");
+        if (subCategoryDTO.getCategoryId() == null || subCategoryDTO.getCategoryId() <= 0)
+            throw new IllegalArgumentException("categoryId must be positive");
+        if (!StringUtils.hasText(subCategoryDTO.getName()))
+            throw new IllegalArgumentException("name is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
+
+        return subCategoryService.updateSubCategoryById(id, subCategoryDTO, user, ip);
     }
 
     @PatchMapping("/{id}")
-    public Mono<SubCategoryPatchDTO> patchSubCategory(@PathVariable Long id, @RequestBody SubCategoryPatchDTO subCategoryDTO) {
-        return subCategoryService.patchSubCategoryById(id, subCategoryDTO);
+    public Mono<SubCategoryDetailDTO> patchSubCategory(
+        @PathVariable Long id,
+        @RequestBody SubCategoryPatchDTO subCategoryDTO,
+        HttpServletRequest request,
+        @RequestBody String user) {
+
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (subCategoryDTO == null) throw new IllegalArgumentException("Patch data is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
+
+        return subCategoryService.patchSubCategoryById(id, subCategoryDTO, user, ip);
     }
 
     @DeleteMapping("/{id}")
-    public Mono<Void> deleteSubCategory(@PathVariable Long id) {
-        subCategoryService.deleteSubCategoryById(id);
+    public Mono<SubCategoryDetailDTO> deleteSubCategory(
+        @PathVariable Long id,
+        HttpServletRequest request,
+        @RequestBody String user) {
+
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
+
+        return subCategoryService.deleteSubCategoryById(id, user, ip);
     }
 }

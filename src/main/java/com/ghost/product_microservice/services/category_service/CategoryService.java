@@ -48,7 +48,6 @@ public class CategoryService {
             categoryDTO.setDescription(category.getDescription());
             return categoryDTO;
         });
-
     }
 
     public Mono<CategoryDetailDTO> findCategoryById(Long id) {
@@ -145,7 +144,7 @@ public class CategoryService {
                     + " has been deleted by the user " + user + ".");
                 return categoryRepository.deleteById(id).thenReturn(dto);
             }).flatMap(deletedDetails ->
-                logAudit(deletedDetails.getId(), "DELETE", user, "Patch product", ip)
+                logAudit(deletedDetails.getId(), "DELETE", user, "Delete product", ip)
                     .thenReturn(deletedDetails)
             );
     }

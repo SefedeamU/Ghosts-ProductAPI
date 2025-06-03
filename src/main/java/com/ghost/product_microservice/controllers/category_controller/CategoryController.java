@@ -7,9 +7,11 @@ import com.ghost.product_microservice.controllers.dto.categorydto.CategoryPatchD
 import com.ghost.product_microservice.services.category_service.CategoryService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import org.springframework.util.StringUtils;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,32 +37,43 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @GetMapping
-    public Flux<CategoryDetailDTO> listCategories(){
+    // Utilidad para extraer y validar IP
+    private String extractClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (!StringUtils.hasText(ip)) {
+            throw new IllegalArgumentException("Client IP address not found in X-Forwarded-For header");
+        }
+        return ip;
+    }
 
+    @GetMapping
+    public Flux<CategoryDetailDTO> listCategories() {
         return categoryService.findAllCategories();
     }
 
-    @GetMapping("{id}")
-    public Mono<CategoryDetailDTO> getCategoryById(@RequestParam Long id) {
+    @GetMapping("/{id}")
+    public Mono<CategoryDetailDTO> getCategoryById(@PathVariable Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         return categoryService.findCategoryById(id);
     }
 
     @GetMapping("/by-name")
     public Mono<CategoryDetailDTO> getCategoryByName(@RequestParam String name) {
+        if (!StringUtils.hasText(name)) throw new IllegalArgumentException("name is required");
         return categoryService.findCategoryByName(name);
     }
 
-    @PostMapping()
+    @PostMapping
     public Mono<CategoryDetailDTO> postCategory(
-        @RequestBody CategoryDetailDTO categoryDTO,
+        @Valid @RequestBody CategoryDetailDTO categoryDTO,
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
+        String ip = extractClientIp(request);
+        if (categoryDTO == null) throw new IllegalArgumentException("Category data is required");
+        if (!StringUtils.hasText(categoryDTO.getName()))
+            throw new IllegalArgumentException("name is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
         return categoryService.createCategory(categoryDTO, user, ip);
     }
@@ -68,14 +81,16 @@ public class CategoryController {
     @PutMapping("/{id}")
     public Mono<CategoryDetailDTO> updateCategory(
         @PathVariable Long id,
-        @RequestBody CategoryCreateDTO categoryDTO,
+        @Valid @RequestBody CategoryCreateDTO categoryDTO,
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (categoryDTO == null) throw new IllegalArgumentException("Category data is required");
+        if (!StringUtils.hasText(categoryDTO.getName()))
+            throw new IllegalArgumentException("name is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
         return categoryService.updateCategoryById(id, categoryDTO, user, ip);
     }
@@ -87,10 +102,10 @@ public class CategoryController {
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (categoryDTO == null) throw new IllegalArgumentException("Patch data is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
         return categoryService.patchCategoryById(id, categoryDTO, user, ip);
     }
@@ -101,10 +116,9 @@ public class CategoryController {
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
         return categoryService.deleteCategoryById(id, user, ip);
     }

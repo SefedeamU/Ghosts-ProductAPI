@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 
 import org.springframework.http.HttpStatus;
 
+import org.springframework.util.StringUtils;
+
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,6 +30,7 @@ import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductP
 import com.ghost.product_microservice.services.product_service.ProductService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 
 @RestController
@@ -39,7 +42,17 @@ public class ProductController {
     public ProductController(ProductService productService) {
         this.productService = productService;
     }
-    
+
+    // Utilidad para extraer y validar IP
+    private String extractClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (!StringUtils.hasText(ip)) {
+            throw new IllegalArgumentException("Client IP address not found in X-Forwarded-For header");
+        }
+        return ip;
+    }
+
+    // ----------- GETS -----------
 
     @GetMapping
     public Flux<FinalProductPartialDetailDTO> listProducts(
@@ -48,6 +61,8 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
+        if (page < 0) throw new IllegalArgumentException("page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("size must be > 0");
         return productService.findAllProducts(page, size);
     }
 
@@ -59,6 +74,9 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
+        if (categoryId == null || categoryId <= 0) throw new IllegalArgumentException("categoryId must be positive");
+        if (page < 0) throw new IllegalArgumentException("page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("size must be > 0");
         return productService.findAllProductsByCategory(categoryId, page, size);
     }
 
@@ -70,22 +88,26 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
+        if (subCategoryId == null || subCategoryId <= 0) throw new IllegalArgumentException("subCategoryId must be positive");
+        if (page < 0) throw new IllegalArgumentException("page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("size must be > 0");
         return productService.findAllProductsBySubcategory(subCategoryId, page, size);
     }
-    
 
     @GetMapping("/{id}")
     public Mono<FinalProductPartialDetailDTO> getProductById(@PathVariable Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         return productService.findProductById(id);
     }
 
     @GetMapping("/by-name/{name}")
     public Mono<FinalProductPartialDetailDTO> getProductsByName(@PathVariable String name) {
+        if (!StringUtils.hasText(name)) throw new IllegalArgumentException("name is required");
         return productService.findProductByName(name);
     }
 
+    // ----------- ADMIN GETS -----------
 
-    // This endpoint is for admin use only
     @GetMapping("/admin")
     public Flux<FinalProductDetailDTO> listProductsWithAdminDetails(
         @RequestParam(defaultValue = "0") int page,
@@ -93,6 +115,8 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
+        if (page < 0) throw new IllegalArgumentException("page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("size must be > 0");
         return productService.findAllProductsWithAdminDetails(page, size);
     }
 
@@ -104,6 +128,9 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
+        if (categoryId == null || categoryId <= 0) throw new IllegalArgumentException("categoryId must be positive");
+        if (page < 0) throw new IllegalArgumentException("page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("size must be > 0");
         return productService.findAllProductsWithAdminDetailsByCategory(categoryId, page, size);
     }
 
@@ -115,59 +142,61 @@ public class ProductController {
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice)
     {
+        if (subCategoryId == null || subCategoryId <= 0) throw new IllegalArgumentException("subCategoryId must be positive");
+        if (page < 0) throw new IllegalArgumentException("page must be >= 0");
+        if (size <= 0) throw new IllegalArgumentException("size must be > 0");
         return productService.findAllProductsWithAdminDetailsBySubCategory(subCategoryId, page, size);
     }
-    
 
     @GetMapping("/admin/{id}")
     public Mono<FinalProductDetailDTO> getProductWithAdminDetailsById(@PathVariable Long id) {
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         return productService.findProductWithAdminDetailsById(id);
     }
 
     @GetMapping("/admin/by-name/{name}")
     public Mono<FinalProductDetailDTO> WithAdminDetailsByName(@PathVariable String name) {
+        if (!StringUtils.hasText(name)) throw new IllegalArgumentException("name is required");
         return productService.findProductWithAdminDetailsByName(name);
     }
 
+    // ----------- ADMIN POST/PUT/PATCH/DELETE -----------
 
     @PostMapping("/admin")
     public Mono<FinalProductDetailDTO> postProduct(
-        @RequestBody FinalProductCreateDTO dto,
+        @Valid @RequestBody FinalProductCreateDTO product,
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
-        return productService.createProduct(dto, user, ip);
+        String ip = extractClientIp(request);
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
+        return productService.createProduct(product, user, ip);
     }
 
     @PutMapping("/admin/{id}")
     public Mono<FinalProductDetailDTO> updateProduct(
-        @PathVariable Long id, 
-        @RequestBody FinalProductCreateDTO product,
+        @PathVariable Long id,
+        @Valid @RequestBody FinalProductCreateDTO product,
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
         return productService.updateProductById(id, product, user, ip);
     }
 
     @PatchMapping("/admin/{id}")
     public Mono<FinalProductDetailDTO> patchProduct(
-        @PathVariable Long id, 
+        @PathVariable Long id,
         @RequestBody FinalProductPatchDTO product,
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (product == null) throw new IllegalArgumentException("Patch data is required");
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
         return productService.patchProductById(id, product, user, ip);
     }
 
@@ -178,11 +207,9 @@ public class ProductController {
         HttpServletRequest request,
         @RequestBody String user) {
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null) {
-            ip = request.getRemoteAddr();
-        }
-
+        if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
+        String ip = extractClientIp(request);
+        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
         return productService.deleteProductById(id, user, ip);
     }
 }
