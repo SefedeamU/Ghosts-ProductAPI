@@ -30,7 +30,7 @@ public class ProductAttributeService {
         ProductAudit audit = new ProductAudit();
         audit.setProductId(productId);
         audit.setAction(action);
-        audit.setUser(user);
+        audit.setUsername(user);
         audit.setEntity("ProductAttribute");
         audit.setDetails(details);
         audit.setDate(LocalDateTime.now());
@@ -77,7 +77,7 @@ public class ProductAttributeService {
     }
 
     public Mono<Void> deleteAttributes(Long productId, String user, String ip) {
-        return productAttributeRepository.deleteAllByProductId(productId)
-            .then(logAudit(productId, "DELETE", user, "Delete all attributes", ip));
+        return logAudit(productId, "DELETE", user, "Delete all attributes", ip)
+            .then(productAttributeRepository.deleteAllByProductId(productId));
     }
 }

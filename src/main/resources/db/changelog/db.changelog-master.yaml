@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Ghost
+      changes:
+        - sqlFile:
+            path: db/changelog/01-create-tables.sql
+            relativeToChangelogFile: false

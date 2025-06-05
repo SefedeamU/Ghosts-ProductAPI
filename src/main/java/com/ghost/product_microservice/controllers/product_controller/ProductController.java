@@ -7,11 +7,12 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 
 import org.springframework.http.HttpStatus;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,8 +21,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductCreateDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.FinalProductDetailDTO;
@@ -43,7 +44,6 @@ public class ProductController {
         this.productService = productService;
     }
 
-    // Utilidad para extraer y validar IP
     private String extractClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (!StringUtils.hasText(ip)) {
@@ -155,61 +155,61 @@ public class ProductController {
     }
 
     @GetMapping("/admin/by-name/{name}")
-    public Mono<FinalProductDetailDTO> WithAdminDetailsByName(@PathVariable String name) {
+    public Mono<FinalProductDetailDTO> getProductWithAdminDetailsByName(@PathVariable String name) {
         if (!StringUtils.hasText(name)) throw new IllegalArgumentException("name is required");
-        return productService.findProductWithAdminDetailsByName(name);
+        return productService.findProductWithAdminDetailsByName(name)
+        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }
 
     // ----------- ADMIN POST/PUT/PATCH/DELETE -----------
 
     @PostMapping("/admin")
-    public Mono<FinalProductDetailDTO> postProduct(
+    public Mono<ResponseEntity<FinalProductDetailDTO>> postProduct(
         @Valid @RequestBody FinalProductCreateDTO product,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         String ip = extractClientIp(request);
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
-        return productService.createProduct(product, user, ip);
+        return productService.createProduct(product, user, ip)
+            .map(created -> ResponseEntity.status(HttpStatus.CREATED).body(created));
     }
 
     @PutMapping("/admin/{id}")
     public Mono<FinalProductDetailDTO> updateProduct(
         @PathVariable Long id,
-        @Valid @RequestBody FinalProductCreateDTO product,
+        @Valid @RequestBody FinalProductCreateDTO dto,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        String ip = extractClientIp(request);
-        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
-        return productService.updateProductById(id, product, user, ip);
+        // ...validaciones...
+        return productService.updateProductById(id, dto, user, extractClientIp(request))
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }
 
     @PatchMapping("/admin/{id}")
     public Mono<FinalProductDetailDTO> patchProduct(
         @PathVariable Long id,
-        @RequestBody FinalProductPatchDTO product,
+        @RequestBody FinalProductPatchDTO dto,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        String ip = extractClientIp(request);
-        if (product == null) throw new IllegalArgumentException("Patch data is required");
-        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
-        return productService.patchProductById(id, product, user, ip);
+        // ...validaciones...
+        return productService.patchProductById(id, dto, user, extractClientIp(request))
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }
 
     @DeleteMapping("/admin/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<FinalProductDetailDTO> deleteProduct(
+    public Mono<ResponseEntity<Void>> deleteProduct(
         @PathVariable Long id,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        String ip = extractClientIp(request);
-        if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
-        return productService.deleteProductById(id, user, ip);
+        return productService.deleteProductById(id, user, extractClientIp(request))
+            .map(deleted -> ResponseEntity.noContent().<Void>build())
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }
 }

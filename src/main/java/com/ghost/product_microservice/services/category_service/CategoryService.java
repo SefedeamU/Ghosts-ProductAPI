@@ -27,11 +27,13 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    private Mono<Void> logAudit(Long productId, String action, String user, String details, String ipAddress) {
+    private Mono<Void> logAudit(Long categoryId, String action, String user, String details, String ipAddress) {
         ProductAudit audit = new ProductAudit();
-        audit.setProductId(productId);
+        audit.setCategoryId(categoryId);
+        audit.setProductId(null);
+        audit.setSubcategoryId(null);
         audit.setAction(action);
-        audit.setUser(user);
+        audit.setUsername(user);
         audit.setEntity("Category");
         audit.setDetails(details);
         audit.setDate(LocalDateTime.now());
@@ -54,6 +56,7 @@ public class CategoryService {
         return categoryRepository.findById(id)
         .map(category -> {
             CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
+            categoryDTO.setId(category.getId());
             categoryDTO.setName(category.getName());
             categoryDTO.setDescription(category.getDescription());
             return categoryDTO;
@@ -71,7 +74,7 @@ public class CategoryService {
         });
     }
 
-    public Mono<CategoryDetailDTO> createCategory(CategoryDetailDTO categoryDTO, String user, String ip) {
+    public Mono<CategoryDetailDTO> createCategory(CategoryCreateDTO categoryDTO, String user, String ip) {
         Category category = new Category();
         category.setName(categoryDTO.getName());
         category.setDescription(categoryDTO.getDescription());
@@ -135,17 +138,18 @@ public class CategoryService {
 
     public Mono<CategoryDetailDTO> deleteCategoryById(Long id, String user, String ip) {
         return categoryRepository.findById(id)
-            .flatMap(category -> {
-                CategoryDetailDTO dto = new CategoryDetailDTO();
-                dto.setId(category.getId());
-                dto.setName("Category " + category.getName() + " deleted.");
-                dto.setDescription("Category with name "
-                    + category.getName() + " and id " + category.getId()
-                    + " has been deleted by the user " + user + ".");
-                return categoryRepository.deleteById(id).thenReturn(dto);
-            }).flatMap(deletedDetails ->
-                logAudit(deletedDetails.getId(), "DELETE", user, "Delete product", ip)
-                    .thenReturn(deletedDetails)
+            .flatMap(category -> 
+                logAudit(category.getId(), "DELETE", user, "Delete product", ip)
+                    .then(categoryRepository.deleteById(id))
+                    .then(Mono.fromCallable(() -> {
+                        CategoryDetailDTO dto = new CategoryDetailDTO();
+                        dto.setId(category.getId());
+                        dto.setName("Category " + category.getName() + " deleted.");
+                        dto.setDescription("Category with name "
+                            + category.getName() + " and id " + category.getId()
+                            + " has been deleted by the user " + user + ".");
+                        return dto;
+                    }))
             );
     }
 }

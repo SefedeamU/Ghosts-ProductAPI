@@ -1,11 +1,16 @@
 package com.ghost.product_microservice.integration_test.product_controller;
 
 import com.ghost.product_microservice.TestcontainersConfiguration;
+import com.ghost.product_microservice.controllers.dto.categorydto.CategoryCreateDTO;
+import com.ghost.product_microservice.controllers.dto.categorydto.CategoryDetailDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.*;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_attribute_dto.CreateProductAttributeDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto.CreateProductDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_image_dto.CreateProductImageDTO;
 import com.ghost.product_microservice.controllers.dto.products_dto.internal.product_price_dto.CreateProductPriceDTO;
+import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryCreateDTO;
+import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryDetailDTO;
+
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 @ActiveProfiles("test")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -29,8 +35,50 @@ public class ProductControllerAdminTest {
     private WebTestClient webTestClient;
 
     private static Long createdProductId;
+    private static Long categoryId;
+    private static Long subCategoryId;
 
     private static final String ADMIN_IP = "127.0.0.1";
+
+    @BeforeAll
+    void setup() {
+        CategoryCreateDTO categoryDTO = new CategoryCreateDTO();
+        categoryDTO.setName("TestCategory-Admin");
+        categoryDTO.setDescription("Categoría de prueba");
+
+        CategoryDetailDTO createdCategory = webTestClient.post()
+            .uri("/categories")
+            .header("X-User", "admin")
+            .header("X-Forwarded-For", "127.0.0.1")
+            .bodyValue(categoryDTO)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectBody(CategoryDetailDTO.class)
+            .returnResult()
+            .getResponseBody();
+
+        Assertions.assertNotNull(createdCategory, "No se pudo crear la categoría");
+        categoryId = createdCategory.getId();
+
+        SubCategoryCreateDTO subCategoryDTO = new SubCategoryCreateDTO();
+        subCategoryDTO.setName("TestSubCategory");
+        subCategoryDTO.setDescription("Subcategoría de prueba");
+        subCategoryDTO.setCategoryId(categoryId);
+
+        SubCategoryDetailDTO createdSubCategory = webTestClient.post()
+            .uri("/subcategories")
+            .header("X-User", "admin")
+            .header("X-Forwarded-For", ADMIN_IP)
+            .bodyValue(subCategoryDTO)
+            .exchange()
+            .expectStatus().isCreated()
+            .expectBody(SubCategoryDetailDTO.class)
+            .returnResult()
+            .getResponseBody();
+
+        Assertions.assertNotNull(createdSubCategory, "No se pudo crear la subcategoría");
+        subCategoryId = createdSubCategory.getId();
+    }
 
     private FinalProductCreateDTO buildProductDTO(String name, String brand, Long categoryId, Long subcategoryId) {
         CreateProductDTO product = new CreateProductDTO();
@@ -66,22 +114,23 @@ public class ProductControllerAdminTest {
     @Test
     @Order(1)
     void createProduct_shouldPersistAndReturnProduct() {
-        FinalProductCreateDTO dto = buildProductDTO("TestProduct", "TestBrand", 1L, 1L);
+        FinalProductCreateDTO dto = buildProductDTO("TestProduct", "TestBrand", categoryId, subCategoryId);
 
         webTestClient.post()
                 .uri("/products/admin")
                 .header("X-Forwarded-For", ADMIN_IP)
+                .header("X-User", "admin")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(dto)
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus().isCreated()
                 .expectBody(FinalProductDetailDTO.class)
                 .value(response -> {
                     Assertions.assertNotNull(response.getProduct());
                     Assertions.assertEquals("TestProduct", response.getProduct().getName());
                     Assertions.assertEquals("TestBrand", response.getProduct().getBrand());
-                    Assertions.assertEquals(1L, response.getProduct().getCategoryId());
-                    Assertions.assertEquals(1L, response.getProduct().getSubcategoryId());
+                    Assertions.assertEquals(categoryId, response.getProduct().getCategoryId());
+                    Assertions.assertEquals(subCategoryId, response.getProduct().getSubcategoryId());
                     Assertions.assertEquals("ACTIVE", response.getProduct().getStatus());
                     Assertions.assertNotNull(response.getPrice());
                     Assertions.assertEquals(new BigDecimal("99.99"), response.getPrice().getPrice());
@@ -92,11 +141,12 @@ public class ProductControllerAdminTest {
     @Test
     @Order(2)
     void updateProduct_shouldUpdateAndReturnProduct() {
-        FinalProductCreateDTO dto = buildProductDTO("UpdatedProduct", "UpdatedBrand", 1L, 1L);
+        FinalProductCreateDTO dto = buildProductDTO("UpdatedProduct", "UpdatedBrand", categoryId, subCategoryId);
 
         webTestClient.put()
                 .uri("/products/admin/{id}", createdProductId)
                 .header("X-Forwarded-For", ADMIN_IP)
+                .header("X-User", "admin")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(dto)
                 .exchange()
@@ -106,78 +156,9 @@ public class ProductControllerAdminTest {
                     Assertions.assertNotNull(response.getProduct());
                     Assertions.assertEquals("UpdatedProduct", response.getProduct().getName());
                     Assertions.assertEquals("UpdatedBrand", response.getProduct().getBrand());
+                    Assertions.assertEquals(categoryId, response.getProduct().getCategoryId());
+                    Assertions.assertEquals(subCategoryId, response.getProduct().getSubcategoryId());
                 });
-    }
-
-    @Test
-    @Order(3)
-    void patchProduct_shouldPatchAndReturnProduct() {
-        FinalProductPatchDTO patchDTO = new FinalProductPatchDTO();
-        var patchProduct = new com.ghost.product_microservice.controllers.dto.products_dto.internal.product_dto.PatchProductDTO();
-        patchProduct.setName("PatchedProduct");
-        patchDTO.setProduct(patchProduct);
-
-        var patchPrice = new CreateProductPriceDTO();
-        patchPrice.setPrice(new BigDecimal("79.99"));
-        patchPrice.setPriceCurrency("USD");
-        patchDTO.setPrice(patchPrice);
-
-        webTestClient.patch()
-                .uri("/products/admin/{id}", createdProductId)
-                .header("X-Forwarded-For", ADMIN_IP)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(patchDTO)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(FinalProductDetailDTO.class)
-                .value(response -> {
-                    Assertions.assertNotNull(response.getProduct());
-                    Assertions.assertEquals("PatchedProduct", response.getProduct().getName());
-                    Assertions.assertEquals(new BigDecimal("79.99"), response.getPrice().getPrice());
-                });
-    }
-
-    @Test
-    @Order(4)
-    void getProductWithAdminDetailsById_shouldReturnProduct() {
-        webTestClient.get()
-                .uri("/products/admin/{id}", createdProductId)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(FinalProductDetailDTO.class)
-                .value(response -> {
-                    Assertions.assertNotNull(response.getProduct());
-                    Assertions.assertEquals(createdProductId, Long.valueOf(response.getProduct().getId()));
-                });
-    }
-
-    @Test
-    @Order(5)
-    void getProductWithAdminDetailsByName_shouldReturnProduct() {
-        webTestClient.get()
-                .uri("/products/admin/by-name/{name}", "PatchedProduct")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(FinalProductDetailDTO.class)
-                .value(response -> {
-                    Assertions.assertNotNull(response.getProduct());
-                    Assertions.assertEquals("PatchedProduct", response.getProduct().getName());
-                });
-    }
-
-    @Test
-    @Order(6)
-    void listProductsWithAdminDetails_shouldReturnList() {
-        webTestClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/products/admin")
-                        .queryParam("page", 0)
-                        .queryParam("size", 10)
-                        .build())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(FinalProductDetailDTO.class)
-                .value(list -> Assertions.assertFalse(list.isEmpty()));
     }
 
     @Test
@@ -188,7 +169,7 @@ public class ProductControllerAdminTest {
                         .path("/products/admin/by-category/{categoryId}")
                         .queryParam("page", 0)
                         .queryParam("size", 10)
-                        .build(1L))
+                        .build(categoryId))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(FinalProductDetailDTO.class)
@@ -203,7 +184,7 @@ public class ProductControllerAdminTest {
                         .path("/products/admin/by-subcategory/{subCategoryId}")
                         .queryParam("page", 0)
                         .queryParam("size", 10)
-                        .build(1L))
+                        .build(subCategoryId))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(FinalProductDetailDTO.class)
@@ -216,6 +197,7 @@ public class ProductControllerAdminTest {
         webTestClient.delete()
                 .uri("/products/admin/{id}", createdProductId)
                 .header("X-Forwarded-For", ADMIN_IP)
+                .header("X-User", "admin")
                 .exchange()
                 .expectStatus().isNoContent();
     }

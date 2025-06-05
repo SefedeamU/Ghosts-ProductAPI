@@ -6,6 +6,6 @@ import com.ghost.product_microservice.models.ProductAudit;
 import reactor.core.publisher.Flux;
 
 public interface ProductAuditRepository extends ReactiveCrudRepository<ProductAudit, Long> {
-    Flux<ProductAudit> findAllByProductsId(Long productsId);
+    Flux<ProductAudit> findAllByProductId(Long productId);
     Flux<ProductAudit> findByProductId(Long productId);
 }

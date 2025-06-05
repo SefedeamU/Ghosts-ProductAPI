@@ -68,15 +68,15 @@ public class ProductPriceService {
     }
 
     public Mono<Void> deleteAllPrices(Long productId, String user, String ip) {
-        return productPriceRepository.deleteAllByProductId(productId)
-            .then(logAudit(productId, "DELETE", user, "Delete all prices", ip));
+        return logAudit(productId, "DELETE", user, "Delete all prices", ip)
+            .then(productPriceRepository.deleteAllByProductId(productId));
     }
 
     private Mono<Void> logAudit(Long productId, String action, String user, String details, String ipAddress) {
         ProductAudit audit = new ProductAudit();
         audit.setProductId(productId);
         audit.setAction(action);
-        audit.setUser(user);
+        audit.setUsername(user);
         audit.setEntity("ProductPrice");
         audit.setDetails(details);
         audit.setDate(LocalDateTime.now());

@@ -16,9 +16,13 @@ public class ProductAudit {
 
     @Column("product_id")
     private Long productId;
+    @Column("category_id")
+    private Long categoryId;
+    @Column("subcategory_id")
+    private Long subcategoryId;
 
     private String action;
-    private String user;
+    private String username;
     private String entity;
     private String details;
     private String ipAddress;

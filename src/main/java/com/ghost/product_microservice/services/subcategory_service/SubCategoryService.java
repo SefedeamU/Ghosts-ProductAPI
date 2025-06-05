@@ -27,12 +27,14 @@ public class SubCategoryService {
         this.productAuditRepository = productAuditRepository;
     }
 
-    private Mono<Void> logAudit(Long productId, String action, String user, String details, String ipAddress) {
+    private Mono<Void> logAudit(Long subcategoryId, String action, String user, String details, String ipAddress) {
         ProductAudit audit = new ProductAudit();
-        audit.setProductId(productId);
+        audit.setCategoryId(subcategoryId);
+        audit.setProductId(null);
+        audit.setSubcategoryId(null);
         audit.setAction(action);
-        audit.setUser(user);
-        audit.setEntity("Sub Category");
+        audit.setUsername(user);
+        audit.setEntity("Category");
         audit.setDetails(details);
         audit.setDate(LocalDateTime.now());
         audit.setIpAddress(ipAddress);
@@ -75,9 +77,9 @@ public class SubCategoryService {
         });
     }
 
-    public Mono<SubCategoryDetailDTO> createSubCategory(Long categoryId, SubCategoryCreateDTO dto, String user, String ip){
+    public Mono<SubCategoryDetailDTO> createSubCategory(Long subcategoryId, SubCategoryCreateDTO dto, String user, String ip){
         SubCategory newSubCategory = new SubCategory();
-        newSubCategory.setCategoryId(categoryId);
+        newSubCategory.setCategoryId(subcategoryId);
         newSubCategory.setDescription(dto.getDescription());
         newSubCategory.setName(dto.getName());
 
@@ -93,8 +95,8 @@ public class SubCategoryService {
         });
     }
 
-    public Mono<SubCategoryDetailDTO> updateSubCategoryById(Long id, SubCategoryCreateDTO dto, String user, String ip){
-        return subCategoryRepository.findById(id)
+    public Mono<SubCategoryDetailDTO> updateSubCategoryById(Long subcategoryId, SubCategoryCreateDTO dto, String user, String ip){
+        return subCategoryRepository.findById(subcategoryId)
         .flatMap(subCategory -> {
             subCategory.setCategoryId(dto.getCategoryId());
             subCategory.setDescription(dto.getDescription());
@@ -108,13 +110,13 @@ public class SubCategoryService {
             response.setName(savedSubCategory.getName());
             response.setDescription(savedSubCategory.getDescription());
             response.setCategoryId(savedSubCategory.getCategoryId());
-            return logAudit(id, "PUT", user, "Put product", ip)
+            return logAudit(subcategoryId, "PUT", user, "Put product", ip)
                         .thenReturn(response);
         });
     }
 
-    public Mono<SubCategoryDetailDTO> patchSubCategoryById(Long id, SubCategoryPatchDTO dto, String user, String ip){
-        return subCategoryRepository.findById(id)
+    public Mono<SubCategoryDetailDTO> patchSubCategoryById(Long subcategoryId, SubCategoryPatchDTO dto, String user, String ip){
+        return subCategoryRepository.findById(subcategoryId)
         .flatMap(subCategory -> {
             if(dto.getCategoryId() != null){
                 subCategory.setCategoryId(dto.getCategoryId());
@@ -133,23 +135,24 @@ public class SubCategoryService {
             response.setName(savedSubCategory.getName());
             response.setDescription(savedSubCategory.getDescription());
             response.setCategoryId(savedSubCategory.getCategoryId());
-            return logAudit(id, "PATCH", user, "Patch product", ip)
+            return logAudit(subcategoryId, "PATCH", user, "Patch product", ip)
                         .thenReturn(response);
         });
     }
 
-    public Mono<SubCategoryDetailDTO> deleteSubCategoryById(Long id, String user, String ip){
-        return subCategoryRepository.findById(id)
-        .flatMap(subCategory -> {
-            SubCategoryDetailDTO response = new SubCategoryDetailDTO();
-            response.setId(subCategory.getId());
-            response.setName(subCategory.getName() + " has been succesfully deleted");
-            response.setDescription("Sub Category deleted by" + user);
-            response.setCategoryId(subCategory.getCategoryId());
-            return subCategoryRepository.deleteById(id).then(
-                    logAudit(id, "DELETE", user, "Delete product", ip)
-                        .thenReturn(response)
-                );
-        });
+    public Mono<SubCategoryDetailDTO> deleteSubCategoryById(Long subcategoryId, String user, String ip){
+        return subCategoryRepository.findById(subcategoryId)
+            .flatMap(subCategory -> 
+                logAudit(subcategoryId, "DELETE", user, "Delete product", ip)
+                    .then(subCategoryRepository.deleteById(subcategoryId))
+                    .then(Mono.fromCallable(() -> {
+                        SubCategoryDetailDTO response = new SubCategoryDetailDTO();
+                        response.setId(subCategory.getId());
+                        response.setName(subCategory.getName() + " has been succesfully deleted");
+                        response.setDescription("Sub Category deleted by" + user);
+                        response.setCategoryId(subCategory.getCategoryId());
+                        return response;
+                    }))
+            );
     }
 }

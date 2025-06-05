@@ -3,7 +3,6 @@ package com.ghost.product_microservice.controllers.category_controller;
 import com.ghost.product_microservice.controllers.dto.categorydto.CategoryCreateDTO;
 import com.ghost.product_microservice.controllers.dto.categorydto.CategoryDetailDTO;
 import com.ghost.product_microservice.controllers.dto.categorydto.CategoryPatchDTO;
-
 import com.ghost.product_microservice.services.category_service.CategoryService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,21 +10,10 @@ import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
-
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-
-
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/categories")
@@ -37,7 +25,6 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    // Utilidad para extraer y validar IP
     private String extractClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (!StringUtils.hasText(ip)) {
@@ -54,20 +41,23 @@ public class CategoryController {
     @GetMapping("/{id}")
     public Mono<CategoryDetailDTO> getCategoryById(@PathVariable Long id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        return categoryService.findCategoryById(id);
+        return categoryService.findCategoryById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 
     @GetMapping("/by-name")
     public Mono<CategoryDetailDTO> getCategoryByName(@RequestParam String name) {
         if (!StringUtils.hasText(name)) throw new IllegalArgumentException("name is required");
-        return categoryService.findCategoryByName(name);
+        return categoryService.findCategoryByName(name)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Mono<CategoryDetailDTO> postCategory(
-        @Valid @RequestBody CategoryDetailDTO categoryDTO,
+        @Valid @RequestBody CategoryCreateDTO categoryDTO,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         String ip = extractClientIp(request);
         if (categoryDTO == null) throw new IllegalArgumentException("Category data is required");
@@ -83,7 +73,7 @@ public class CategoryController {
         @PathVariable Long id,
         @Valid @RequestBody CategoryCreateDTO categoryDTO,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         String ip = extractClientIp(request);
@@ -92,7 +82,8 @@ public class CategoryController {
             throw new IllegalArgumentException("name is required");
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
-        return categoryService.updateCategoryById(id, categoryDTO, user, ip);
+        return categoryService.updateCategoryById(id, categoryDTO, user, ip)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 
     @PatchMapping("/{id}")
@@ -100,26 +91,28 @@ public class CategoryController {
         @PathVariable Long id,
         @RequestBody CategoryPatchDTO categoryDTO,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         String ip = extractClientIp(request);
         if (categoryDTO == null) throw new IllegalArgumentException("Patch data is required");
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
-        return categoryService.patchCategoryById(id, categoryDTO, user, ip);
+        return categoryService.patchCategoryById(id, categoryDTO, user, ip)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 
     @DeleteMapping("/{id}")
     public Mono<CategoryDetailDTO> deleteCategory(
         @PathVariable Long id,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         String ip = extractClientIp(request);
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
-        return categoryService.deleteCategoryById(id, user, ip);
+        return categoryService.deleteCategoryById(id, user, ip)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 }

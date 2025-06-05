@@ -68,7 +68,7 @@ public class ProductService {
         ProductAudit audit = new ProductAudit();
         audit.setProductId(productId);
         audit.setAction(action);
-        audit.setUser(user);
+        audit.setUsername(user);
         audit.setEntity("Product");
         audit.setDetails(details);
         audit.setDate(LocalDateTime.now());
@@ -418,7 +418,7 @@ public class ProductService {
                         obj.setId(audit.getId());
                         obj.setProductId(audit.getProductId());
                         obj.setAction(audit.getAction());
-                        obj.setUser(audit.getUser());
+                        obj.setUsername(audit.getUsername());
                         obj.setDate(audit.getDate());
                         return obj;
                     })
@@ -492,7 +492,7 @@ public class ProductService {
                         obj.setId(audit.getId());
                         obj.setProductId(audit.getProductId());
                         obj.setAction(audit.getAction());
-                        obj.setUser(audit.getUser());
+                        obj.setUsername(audit.getUsername());
                         obj.setDate(audit.getDate());
                         return obj;
                     })
@@ -566,7 +566,7 @@ public class ProductService {
                         obj.setId(audit.getId());
                         obj.setProductId(audit.getProductId());
                         obj.setAction(audit.getAction());
-                        obj.setUser(audit.getUser());
+                        obj.setUsername(audit.getUsername());
                         obj.setDate(audit.getDate());
                         return obj;
                     })
@@ -638,7 +638,7 @@ public class ProductService {
                         obj.setId(audit.getId());
                         obj.setProductId(audit.getProductId());
                         obj.setAction(audit.getAction());
-                        obj.setUser(audit.getUser());
+                        obj.setUsername(audit.getUsername());
                         obj.setDate(audit.getDate());
                         return obj;
                     })
@@ -710,7 +710,7 @@ public class ProductService {
                         obj.setId(audit.getId());
                         obj.setProductId(audit.getProductId());
                         obj.setAction(audit.getAction());
-                        obj.setUser(audit.getUser());
+                        obj.setUsername(audit.getUsername());
                         obj.setDate(audit.getDate());
                         return obj;
                     })
@@ -873,18 +873,19 @@ public class ProductService {
             });
     }
 
-    public Mono<FinalProductDetailDTO> deleteProductById(Long id, String deletedByUser, String ip) {
-        return findProductWithAdminDetailsById(id)
-            .flatMap(productDetail ->
+    public Mono<Boolean> deleteProductById(Long id, String deletedByUser, String ip) {
+    return findProductWithAdminDetailsById(id)
+        .flatMap(productDetail ->
+            logAudit(productDetail.getProduct().getId(), "DELETE", deletedByUser, "Delete product", ip)
+            .then(
                 Mono.when(
                     productAttributeService.deleteAttributes(id, deletedByUser, ip),
                     productImageService.deleteImages(id, deletedByUser, ip),
                     productPriceService.deleteAllPrices(id, deletedByUser, ip)
                 )
                 .then(productRepository.deleteById(id))
-                .then(logAudit(productDetail.getProduct().getId(), "DELETE", deletedByUser, "Delete product", ip))
-                .thenReturn(productDetail)
-            );
+                .thenReturn(true) // <- Aquí retornas Mono.just(true)
+            )
+        );
     }
-
 }

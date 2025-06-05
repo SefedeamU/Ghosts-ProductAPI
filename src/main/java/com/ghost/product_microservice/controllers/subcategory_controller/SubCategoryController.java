@@ -7,10 +7,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 
 import com.ghost.product_microservice.controllers.dto.subcategorydto.SubCategoryCreateDTO;
@@ -33,7 +35,6 @@ public class SubCategoryController {
         this.subCategoryService = subCategoryService;
     }
 
-    // Utilidad para extraer y validar IP
     private String extractClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (!StringUtils.hasText(ip)) {
@@ -61,10 +62,11 @@ public class SubCategoryController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Mono<SubCategoryDetailDTO> postSubCategory(
         @Valid @RequestBody SubCategoryCreateDTO subCategoryDTO,
         HttpServletRequest request,
-        @RequestBody String user){
+        @RequestHeader("X-User") String user){
 
         String ip = extractClientIp(request);
         if (subCategoryDTO == null) throw new IllegalArgumentException("SubCategory data is required");
@@ -82,7 +84,7 @@ public class SubCategoryController {
         @PathVariable Long id,
         @Valid @RequestBody SubCategoryCreateDTO subCategoryDTO,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         String ip = extractClientIp(request);
@@ -101,7 +103,7 @@ public class SubCategoryController {
         @PathVariable Long id,
         @RequestBody SubCategoryPatchDTO subCategoryDTO,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         String ip = extractClientIp(request);
@@ -115,7 +117,7 @@ public class SubCategoryController {
     public Mono<SubCategoryDetailDTO> deleteSubCategory(
         @PathVariable Long id,
         HttpServletRequest request,
-        @RequestBody String user) {
+        @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
         String ip = extractClientIp(request);

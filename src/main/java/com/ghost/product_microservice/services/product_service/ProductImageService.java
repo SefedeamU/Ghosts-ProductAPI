@@ -33,7 +33,7 @@ public class ProductImageService {
         ProductAudit audit = new ProductAudit();
         audit.setProductId(productId);
         audit.setAction(action);
-        audit.setUser(user);
+        audit.setUsername(user);
         audit.setEntity("ProductImage");
         audit.setDetails(details);
         audit.setDate(LocalDateTime.now());
@@ -95,7 +95,7 @@ public class ProductImageService {
     }
 
     public Mono<Void> deleteImages(Long productId, String user, String ip) {
-        return productImageRepository.deleteAllByProductId(productId)
-            .then(logAudit(productId, "DELETE", user, "Delete all images", ip));
+        return logAudit(productId, "DELETE", user, "Delete all images", ip)
+            .then(productImageRepository.deleteAllByProductId(productId));
     }
 }
