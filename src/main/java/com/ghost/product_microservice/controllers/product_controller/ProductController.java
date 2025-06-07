@@ -151,7 +151,8 @@ public class ProductController {
     @GetMapping("/admin/{id}")
     public Mono<FinalProductDetailDTO> getProductWithAdminDetailsById(@PathVariable Long id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        return productService.findProductWithAdminDetailsById(id);
+        return productService.findProductWithAdminDetailsById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }
 
     @GetMapping("/admin/by-name/{name}")
@@ -183,7 +184,6 @@ public class ProductController {
         @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        // ...validaciones...
         return productService.updateProductById(id, dto, user, extractClientIp(request))
             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }
@@ -196,7 +196,6 @@ public class ProductController {
         @RequestHeader("X-User") String user) {
 
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        // ...validaciones...
         return productService.patchProductById(id, dto, user, extractClientIp(request))
             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")));
     }

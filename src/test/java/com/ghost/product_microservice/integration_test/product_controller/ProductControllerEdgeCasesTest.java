@@ -15,9 +15,10 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.r2dbc.core.DatabaseClient;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Optional;
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import(TestcontainersConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ProductControllerEdgeCasesTest {
@@ -33,15 +35,23 @@ public class ProductControllerEdgeCasesTest {
     @Autowired
     private WebTestClient webTestClient;
 
+    @Autowired
+    private DatabaseClient databaseClient;
+
     private Long categoryId;
     private Long subCategoryId;
 
     private static final String ADMIN_IP = "127.0.0.1";
 
-    @BeforeAll
-    void setup() {
+    @BeforeEach
+    void cleanAndSetupData(TestInfo testInfo) {
+        databaseClient.sql("TRUNCATE TABLE product_audit RESTART IDENTITY CASCADE").then().block();
+        databaseClient.sql("TRUNCATE TABLE product RESTART IDENTITY CASCADE").then().block();
+        databaseClient.sql("TRUNCATE TABLE subcategory RESTART IDENTITY CASCADE").then().block();
+        databaseClient.sql("TRUNCATE TABLE category RESTART IDENTITY CASCADE").then().block();
+
         CategoryCreateDTO categoryDTO = new CategoryCreateDTO();
-        categoryDTO.setName("EdgeCaseCategory");
+        categoryDTO.setName("EdgeCaseCategory-" + testInfo.getDisplayName() + "-" + System.nanoTime());
         categoryDTO.setDescription("Edge case category");
 
         CategoryDetailDTO createdCategory = webTestClient.post()
@@ -55,11 +65,11 @@ public class ProductControllerEdgeCasesTest {
             .returnResult()
             .getResponseBody();
 
-        Assertions.assertNotNull(createdCategory, "No se pudo crear la categoría");
+        Assertions.assertNotNull(createdCategory, "It was not possible to create the category");
         categoryId = createdCategory.getId();
 
         SubCategoryCreateDTO subCategoryDTO = new SubCategoryCreateDTO();
-        subCategoryDTO.setName("EdgeCaseSubCategory");
+        subCategoryDTO.setName("EdgeCaseSubCategory-" + testInfo.getDisplayName() + "-" + System.nanoTime());
         subCategoryDTO.setDescription("Edge case subcategory");
         subCategoryDTO.setCategoryId(categoryId);
 
@@ -74,7 +84,7 @@ public class ProductControllerEdgeCasesTest {
             .returnResult()
             .getResponseBody();
 
-        Assertions.assertNotNull(createdSubCategory, "No se pudo crear la subcategoría");
+        Assertions.assertNotNull(createdSubCategory, "It was not possible to create the subcategory");
         subCategoryId = createdSubCategory.getId();
     }
 
@@ -117,7 +127,7 @@ public class ProductControllerEdgeCasesTest {
         webTestClient.post()
             .uri("/products/admin")
             .header("X-Forwarded-For", ADMIN_IP)
-            .contentType(MediaType.APPLICATION_JSON)
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
             .bodyValue(dto)
             .exchange()
             .expectStatus().isBadRequest();
@@ -132,7 +142,7 @@ public class ProductControllerEdgeCasesTest {
             .uri("/products/admin")
             .header("X-User", "admin")
             .header("X-Forwarded-For", ADMIN_IP)
-            .contentType(MediaType.APPLICATION_JSON)
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
             .bodyValue(dto)
             .exchange()
             .expectStatus().isBadRequest();
@@ -147,7 +157,7 @@ public class ProductControllerEdgeCasesTest {
             .uri("/products/admin")
             .header("X-User", "admin")
             .header("X-Forwarded-For", ADMIN_IP)
-            .contentType(MediaType.APPLICATION_JSON)
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
             .bodyValue(dto)
             .exchange()
             .expectStatus().isBadRequest();
@@ -171,7 +181,7 @@ public class ProductControllerEdgeCasesTest {
             .uri("/products/admin/{id}", 999999)
             .header("X-User", "admin")
             .header("X-Forwarded-For", ADMIN_IP)
-            .contentType(MediaType.APPLICATION_JSON)
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
             .bodyValue(dto)
             .exchange()
             .expectStatus().isNotFound();
@@ -191,7 +201,7 @@ public class ProductControllerEdgeCasesTest {
             .uri("/products/admin/{id}", 999999)
             .header("X-User", "admin")
             .header("X-Forwarded-For", ADMIN_IP)
-            .contentType(MediaType.APPLICATION_JSON)
+            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
             .bodyValue(patchDTO)
             .exchange()
             .expectStatus().isNotFound();

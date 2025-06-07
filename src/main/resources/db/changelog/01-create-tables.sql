@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS category (
 );
 
 -- Tabla de subcategorías
-CREATE TABLE IF NOT EXISTS category_subcategory (
+CREATE TABLE IF NOT EXISTS subcategory (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS product (
     status VARCHAR(50),
     brand VARCHAR(100),
     category_id BIGINT NOT NULL REFERENCES category(id),
-    subcategory_id BIGINT REFERENCES category_subcategory(id),
+    subcategory_id BIGINT REFERENCES subcategory(id),
     fecha_creacion TIMESTAMP,
     fecha_modificacion TIMESTAMP,
     creado_por VARCHAR(100),
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS product_audit (
     id BIGSERIAL PRIMARY KEY,
     product_id BIGINT REFERENCES product(id) ON DELETE CASCADE,
     category_id BIGINT REFERENCES category(id) ON DELETE CASCADE,
-    subcategory_id BIGINT REFERENCES category_subcategory(id) ON DELETE CASCADE,
+    subcategory_id BIGINT REFERENCES subcategory(id) ON DELETE CASCADE,
     action VARCHAR(100),
     username VARCHAR(100),
     entity VARCHAR(100),

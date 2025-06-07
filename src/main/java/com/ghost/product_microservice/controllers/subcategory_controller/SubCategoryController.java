@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.StringUtils;
 
@@ -52,7 +53,8 @@ public class SubCategoryController {
     @GetMapping("/{id}")
     public Mono<SubCategoryDetailDTO> getSubCategoryById(@PathVariable Long id) {
         if (id == null || id <= 0) throw new IllegalArgumentException("id must be positive");
-        return subCategoryService.findSubCategoryById(id);
+        return subCategoryService.findSubCategoryById(id)
+        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Sub Category not found")));
     }
 
     @GetMapping("/by-name/{name}")
@@ -95,7 +97,8 @@ public class SubCategoryController {
             throw new IllegalArgumentException("name is required");
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
-        return subCategoryService.updateSubCategoryById(id, subCategoryDTO, user, ip);
+        return subCategoryService.updateSubCategoryById(id, subCategoryDTO, user, ip)
+        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 
     @PatchMapping("/{id}")
@@ -110,7 +113,8 @@ public class SubCategoryController {
         if (subCategoryDTO == null) throw new IllegalArgumentException("Patch data is required");
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
-        return subCategoryService.patchSubCategoryById(id, subCategoryDTO, user, ip);
+        return subCategoryService.patchSubCategoryById(id, subCategoryDTO, user, ip)
+        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 
     @DeleteMapping("/{id}")
@@ -123,6 +127,7 @@ public class SubCategoryController {
         String ip = extractClientIp(request);
         if (!StringUtils.hasText(user)) throw new IllegalArgumentException("user is required");
 
-        return subCategoryService.deleteSubCategoryById(id, user, ip);
+        return subCategoryService.deleteSubCategoryById(id, user, ip)
+        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
     }
 }

@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:15
+    container_name: product_db
+    environment:
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  product-microservice:
+    build: .
+    container_name: product_microservice
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+volumes:
+  db_data:

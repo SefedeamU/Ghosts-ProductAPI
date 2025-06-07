@@ -1,9 +1,9 @@
 HELP.md
-target/
+target/*
+!target/product-microservice-0.0.1-SNAPSHOT.jar
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-.env
 
 ### STS ###
 .apt_generated

@@ -884,7 +884,7 @@ public class ProductService {
                     productPriceService.deleteAllPrices(id, deletedByUser, ip)
                 )
                 .then(productRepository.deleteById(id))
-                .thenReturn(true) // <- Aquí retornas Mono.just(true)
+                .thenReturn(true)
             )
         );
     }
