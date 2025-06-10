@@ -2,7 +2,9 @@ package com.ghost.product_microservice.services.category_service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ghost.product_microservice.controllers.dto.categorydto.CategoryCreateDTO;
 import com.ghost.product_microservice.controllers.dto.categorydto.CategoryDetailDTO;
@@ -43,35 +45,38 @@ public class CategoryService {
 
     public Flux<CategoryDetailDTO> findAllCategories() {
         return categoryRepository.findAll()
-        .map(category -> {
-            CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
-            categoryDTO.setId(category.getId());
-            categoryDTO.setName(category.getName());
-            categoryDTO.setDescription(category.getDescription());
-            return categoryDTO;
-        });
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "There are no categories available")))
+            .map(category -> {
+                CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
+                categoryDTO.setId(category.getId());
+                categoryDTO.setName(category.getName());
+                categoryDTO.setDescription(category.getDescription());
+                return categoryDTO;
+            });
     }
 
     public Mono<CategoryDetailDTO> findCategoryById(Long id) {
         return categoryRepository.findById(id)
-        .map(category -> {
-            CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
-            categoryDTO.setId(category.getId());
-            categoryDTO.setName(category.getName());
-            categoryDTO.setDescription(category.getDescription());
-            return categoryDTO;
-        });
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The category does not exist")))
+            .map(category -> {
+                CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
+                categoryDTO.setId(category.getId());
+                categoryDTO.setName(category.getName());
+                categoryDTO.setDescription(category.getDescription());
+                return categoryDTO;
+            });
     }
 
     public Mono<CategoryDetailDTO> findCategoryByName(String name) {
         return categoryRepository.findCategoryByName(name)
-        .map(category -> {
-            CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
-            categoryDTO.setId(category.getId());
-            categoryDTO.setName(category.getName());
-            categoryDTO.setDescription(category.getDescription());
-            return categoryDTO;
-        });
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The category does not exist")))
+            .map(category -> {
+                CategoryDetailDTO categoryDTO = new CategoryDetailDTO();
+                categoryDTO.setId(category.getId());
+                categoryDTO.setName(category.getName());
+                categoryDTO.setDescription(category.getDescription());
+                return categoryDTO;
+            });
     }
 
     public Mono<CategoryDetailDTO> createCategory(CategoryCreateDTO categoryDTO, String user, String ip) {
@@ -95,6 +100,7 @@ public class CategoryService {
 
     public Mono<CategoryDetailDTO> updateCategoryById(Long id, CategoryCreateDTO categoryDTO, String user, String ip) {
         return categoryRepository.findById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The category does not exist")))
             .flatMap(category -> {
                 category.setName(categoryDTO.getName());
                 category.setDescription(categoryDTO.getDescription());
@@ -115,6 +121,7 @@ public class CategoryService {
 
     public Mono<CategoryDetailDTO> patchCategoryById(Long id, CategoryPatchDTO categoryDTO, String user, String ip) {
         return categoryRepository.findById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The category does not exist")))
             .flatMap(category -> {
                 if (categoryDTO.getName() != null) {
                     category.setName(categoryDTO.getName());
@@ -138,6 +145,7 @@ public class CategoryService {
 
     public Mono<CategoryDetailDTO> deleteCategoryById(Long id, String user, String ip) {
         return categoryRepository.findById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The category does not exist")))
             .flatMap(category -> 
                 logAudit(category.getId(), "DELETE", user, "Delete product", ip)
                     .then(categoryRepository.deleteById(id))

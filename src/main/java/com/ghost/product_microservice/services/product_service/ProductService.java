@@ -15,6 +15,8 @@ import com.ghost.product_microservice.models.ProductAttribute;
 import com.ghost.product_microservice.models.ProductAudit;
 import com.ghost.product_microservice.models.ProductImage;
 import com.ghost.product_microservice.models.ProductPrice;
+import com.ghost.product_microservice.repositories.category_repository.CategoryRepository;
+import com.ghost.product_microservice.repositories.category_repository.SubCategoryRepository;
 import com.ghost.product_microservice.repositories.product_repository.ProductAttributeRepository;
 import com.ghost.product_microservice.repositories.product_repository.ProductAuditRepository;
 import com.ghost.product_microservice.repositories.product_repository.ProductImageRepository;
@@ -28,7 +30,9 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ProductService {
@@ -38,6 +42,8 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductAuditRepository productAuditRepository;
     private final ProductAttributeRepository productAttributeRepository;
+    private final CategoryRepository categoryRepository;
+    private final SubCategoryRepository subCategoryRepository;
 
     private final ProductAttributeService productAttributeService;
     private final ProductImageService productImageService;
@@ -48,6 +54,8 @@ public class ProductService {
                         ProductImageRepository prodcutImageRepository,
                         ProductAuditRepository productAuditRepository,
                         ProductAttributeRepository productAttributeRepository,
+                        CategoryRepository categoryRepository,
+                        SubCategoryRepository subCategoryRepository,
 
                         ProductAttributeService productAttributeService,
                         ProductImageService productImageService,
@@ -58,6 +66,8 @@ public class ProductService {
         this.productImageRepository = prodcutImageRepository;
         this.productAuditRepository = productAuditRepository;
         this.productAttributeRepository = productAttributeRepository;
+        this.categoryRepository = categoryRepository;
+        this.subCategoryRepository = subCategoryRepository;
 
         this.productAttributeService = productAttributeService;
         this.productImageService = productImageService;
@@ -79,6 +89,7 @@ public class ProductService {
     //Public methods to retrieve products with pagination and details
     public Flux<FinalProductPartialDetailDTO> findAllProducts(int page, int size) {
         return productRepository.findAll()
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No products found with the given criteria")))
             .skip((long) page*size)
             .take(size)
             .flatMap(p -> {
@@ -98,6 +109,7 @@ public class ProductService {
                 Mono<List<GetProductAttributeDTO>> productAttributes = productAttributeRepository.findAllByProductId(p.getId())
                     .map(attr -> {
                         GetProductAttributeDTO dto = new GetProductAttributeDTO();
+                        dto.setId(attr.getId());
                         dto.setAttributeName(attr.getAttributeName());
                         dto.setAttributeValue(attr.getAttributeValue());
                         return dto;
@@ -108,6 +120,7 @@ public class ProductService {
                 Mono<List<GetProductImageDTO>> ProductImages = productImageRepository.findAllByProductId(p.getId())
                     .map(image -> {
                         GetProductImageDTO dto = new GetProductImageDTO();
+                        dto.setId(image.getId());
                         dto.setUrlImg(image.getUrlImg());
                         dto.setPriority(image.getPriority());
                         return dto;
@@ -117,6 +130,7 @@ public class ProductService {
                 Mono<GetProductPriceDTO> ProductPrice = productPriceRepository.findByProductIdAndIsActiveTrue(p.getId())
                     .map(price -> {
                         GetProductPriceDTO dto = new GetProductPriceDTO();
+                        dto.setId(price.getId());
                         dto.setPrice(price.getPrice());
                         dto.setPriceCurrency(price.getPriceCurrency());
                         dto.setStartDate(price.getStartDate());
@@ -140,7 +154,7 @@ public class ProductService {
 
     public Flux<FinalProductPartialDetailDTO> findAllProductsByCategory(Long categoryId, int page, int size) {
         return productRepository.findAllByCategoryId(categoryId)
-            .skip((long) page*size)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No products found with the given criteria")))            .skip((long) page*size)
             .take(size)
             .flatMap(p -> {
 
@@ -159,6 +173,7 @@ public class ProductService {
                 Mono<List<GetProductAttributeDTO>> productAttributes = productAttributeRepository.findAllByProductId(p.getId())
                     .map(attr -> {
                         GetProductAttributeDTO dto = new GetProductAttributeDTO();
+                        dto.setId(attr.getId());
                         dto.setAttributeName(attr.getAttributeName());
                         dto.setAttributeValue(attr.getAttributeValue());
                         return dto;
@@ -169,6 +184,7 @@ public class ProductService {
                 Mono<List<GetProductImageDTO>> ProductImages = productImageRepository.findAllByProductId(p.getId())
                     .map(image -> {
                         GetProductImageDTO dto = new GetProductImageDTO();
+                        dto.setId(image.getId());
                         dto.setUrlImg(image.getUrlImg());
                         dto.setPriority(image.getPriority());
                         return dto;
@@ -178,6 +194,7 @@ public class ProductService {
                 Mono<GetProductPriceDTO> ProductPrice = productPriceRepository.findByProductIdAndIsActiveTrue(p.getId())
                     .map(price -> {
                         GetProductPriceDTO dto = new GetProductPriceDTO();
+                        dto.setId(price.getId());
                         dto.setPrice(price.getPrice());
                         dto.setPriceCurrency(price.getPriceCurrency());
                         dto.setStartDate(price.getStartDate());
@@ -202,6 +219,7 @@ public class ProductService {
 
     public Flux<FinalProductPartialDetailDTO> findAllProductsBySubcategory(Long subCategoryId, int page, int size) {
         return productRepository.findAllBySubcategoryId(subCategoryId)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No products found with the given criteria")))            .skip((long) page*size)
             .skip((long) page*size)
             .take(size)
             .flatMap(p -> {
@@ -221,6 +239,7 @@ public class ProductService {
                 Mono<List<GetProductAttributeDTO>> productAttributes = productAttributeRepository.findAllByProductId(p.getId())
                     .map(attr -> {
                         GetProductAttributeDTO dto = new GetProductAttributeDTO();
+                        dto.setId(attr.getId());
                         dto.setAttributeName(attr.getAttributeName());
                         dto.setAttributeValue(attr.getAttributeValue());
                         return dto;
@@ -231,6 +250,7 @@ public class ProductService {
                 Mono<List<GetProductImageDTO>> ProductImages = productImageRepository.findAllByProductId(p.getId())
                     .map(image -> {
                         GetProductImageDTO dto = new GetProductImageDTO();
+                        dto.setId(image.getId());
                         dto.setUrlImg(image.getUrlImg());
                         dto.setPriority(image.getPriority());
                         return dto;
@@ -241,6 +261,7 @@ public class ProductService {
                 Mono<GetProductPriceDTO> ProductPrice = productPriceRepository.findByProductIdAndIsActiveTrue(p.getId())
                     .map(price -> {
                         GetProductPriceDTO dto = new GetProductPriceDTO();
+                        dto.setId(price.getId());
                         dto.setPrice(price.getPrice());
                         dto.setPriceCurrency(price.getPriceCurrency());
                         dto.setStartDate(price.getStartDate());
@@ -264,6 +285,7 @@ public class ProductService {
 
     public Mono<FinalProductPartialDetailDTO> findProductById(Long id) {
         return productRepository.findById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The product does not exist")))
             .flatMap(p -> {
 
                 GetProductDTO product = new GetProductDTO();
@@ -279,6 +301,7 @@ public class ProductService {
                 Mono<List<GetProductAttributeDTO>> productAttributes = productAttributeRepository.findAllByProductId(p.getId())
                     .map(attr -> {
                         GetProductAttributeDTO dto = new GetProductAttributeDTO();
+                        dto.setId(attr.getId());
                         dto.setAttributeName(attr.getAttributeName());
                         dto.setAttributeValue(attr.getAttributeValue());
                         return dto;
@@ -288,6 +311,7 @@ public class ProductService {
                 Mono<List<GetProductImageDTO>> ProductImages = productImageRepository.findAllByProductId(p.getId())
                     .map(image -> {
                         GetProductImageDTO dto = new GetProductImageDTO();
+                        dto.setId(image.getId());
                         dto.setUrlImg(image.getUrlImg());
                         dto.setPriority(image.getPriority());
                         return dto;
@@ -297,6 +321,7 @@ public class ProductService {
                 Mono<GetProductPriceDTO> ProductPrice = productPriceRepository.findByProductIdAndIsActiveTrue(p.getId())
                     .map(price -> {
                         GetProductPriceDTO dto = new GetProductPriceDTO();
+                        dto.setId(price.getId());
                         dto.setPrice(price.getPrice());
                         dto.setPriceCurrency(price.getPriceCurrency());
                         dto.setStartDate(price.getStartDate());
@@ -321,6 +346,7 @@ public class ProductService {
     
     public Mono<FinalProductPartialDetailDTO> findProductByName(String name) {
         return productRepository.findByName(name)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The product does not exist")))
             .flatMap(p -> {
 
                 GetProductDTO product = new GetProductDTO();
@@ -336,6 +362,7 @@ public class ProductService {
                 Mono<List<GetProductAttributeDTO>> productAttributes = productAttributeRepository.findAllByProductId(p.getId())
                     .map(attr -> {
                         GetProductAttributeDTO dto = new GetProductAttributeDTO();
+                        dto.setId(attr.getId());
                         dto.setAttributeName(attr.getAttributeName());
                         dto.setAttributeValue(attr.getAttributeValue());
                         return dto;
@@ -345,6 +372,7 @@ public class ProductService {
                 Mono<List<GetProductImageDTO>> ProductImages = productImageRepository.findAllByProductId(p.getId())
                     .map(image -> {
                         GetProductImageDTO dto = new GetProductImageDTO();
+                        dto.setId(image.getId());
                         dto.setUrlImg(image.getUrlImg());
                         dto.setPriority(image.getPriority());
                         return dto;
@@ -354,6 +382,7 @@ public class ProductService {
                 Mono<GetProductPriceDTO> ProductPrice = productPriceRepository.findByProductIdAndIsActiveTrue(p.getId())
                     .map(price -> {
                         GetProductPriceDTO dto = new GetProductPriceDTO();
+                        dto.setId(price.getId());
                         dto.setPrice(price.getPrice());
                         dto.setPriceCurrency(price.getPriceCurrency());
                         dto.setStartDate(price.getStartDate());
@@ -378,6 +407,7 @@ public class ProductService {
 
     public Flux<FinalProductDetailDTO> findAllProductsWithAdminDetails(int page, int size){
         return productRepository.findAll()
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No products found with the given criteria")))
             .skip((long) page*size)
             .take(size)
             .flatMap(p -> {
@@ -452,6 +482,7 @@ public class ProductService {
 
     public Flux<FinalProductDetailDTO> findAllProductsWithAdminDetailsByCategory(Long categoryId, int page, int size){
         return productRepository.findAllByCategoryId(categoryId)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No products found with the given criteria")))
             .skip((long) page*size)
             .take(size)
             .flatMap(p -> {
@@ -526,6 +557,7 @@ public class ProductService {
 
     public Flux<FinalProductDetailDTO> findAllProductsWithAdminDetailsBySubCategory(Long subCategoryId, int page, int size){
         return productRepository.findAllBySubcategoryId(subCategoryId)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No products found with the given criteria")))
             .skip((long) page*size)
             .take(size)
             .flatMap(p -> {
@@ -600,6 +632,7 @@ public class ProductService {
 
     public Mono<FinalProductDetailDTO> findProductWithAdminDetailsById(Long productId){
         return productRepository.findById(productId)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The product does not exist")))
             .flatMap(p -> {
 
                 // Base product
@@ -672,6 +705,7 @@ public class ProductService {
 
     public Mono<FinalProductDetailDTO> findProductWithAdminDetailsByName(String name){
         return productRepository.findByName(name)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "The product does not exist")))
             .flatMap(p -> {
 
                 // Base product
@@ -743,149 +777,203 @@ public class ProductService {
     }
 
     public Mono<FinalProductDetailDTO> createProduct(FinalProductCreateDTO dto, String createdByUser, String ip) {
-        Product product = new Product();
-        product.setName(dto.getProduct().getName());
-        product.setBrand(dto.getProduct().getBrand());
-        product.setCategoryId(dto.getProduct().getCategoryId());
-        product.setSubcategoryId(dto.getProduct().getSubcategoryId());
-        product.setDescription(dto.getProduct().getDescription());
-        product.setStock(dto.getProduct().getStock());
-        product.setStatus(dto.getProduct().getStatus());
-        product.setCreatedAt(LocalDateTime.now());
-        product.setModificatedAt(null);
-        product.setCreatedBy(dto.getProduct().getUser());
-        product.setModificatedBy(null);
+        Long categoryId = dto.getProduct().getCategoryId();
+        Long subcategoryId = dto.getProduct().getSubcategoryId();
 
-        return productRepository.save(product)
-            .flatMap(savedProduct -> {
-                Mono<Void> saveAttributes = productAttributeService.createAttributes(
-                    savedProduct.getId(),
-                    dto.getAttributes().orElse(Collections.emptyList()),
-                    createdByUser,
-                    ip
-                );
+        // Verifica existencia de categoría y subcategoría antes de guardar
+        return categoryRepository.existsById(categoryId)
+            .flatMap(existsCategory -> {
+                if (!existsCategory) {
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The category does not exist"));
+                }
+                return subCategoryRepository.existsById(subcategoryId)
+                    .flatMap(existsSubcategory -> {
+                        if (!existsSubcategory) {
+                            return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The subcategory does not exist"));
+                        }
+                        // Aquí va tu lógica actual de guardado
+                        Product product = new Product();
+                        product.setName(dto.getProduct().getName());
+                        product.setBrand(dto.getProduct().getBrand());
+                        product.setCategoryId(categoryId);
+                        product.setSubcategoryId(subcategoryId);
+                        product.setDescription(dto.getProduct().getDescription());
+                        product.setStock(dto.getProduct().getStock());
+                        product.setStatus(dto.getProduct().getStatus());
+                        product.setCreatedAt(LocalDateTime.now());
+                        product.setModificatedAt(null);
+                        product.setCreatedBy(dto.getProduct().getUser());
+                        product.setModificatedBy(null);
 
-                Mono<Void> saveImages = productImageService.createImages(
-                    savedProduct.getId(),
-                    dto.getImages().orElse(Collections.emptyList()),
-                    createdByUser,
-                    ip
-                );
+                        return productRepository.save(product)
+                            .flatMap(savedProduct -> {
+                                Mono<Void> saveAttributes = productAttributeService.createAttributes(
+                                    savedProduct.getId(),
+                                    dto.getAttributes().orElse(Collections.emptyList()),
+                                    createdByUser,
+                                    ip
+                                );
 
-                Mono<Void> savePrice = productPriceService.createPrice(
-                    savedProduct.getId(),
-                    dto.getPrice(),
-                    createdByUser,
-                    ip
-                ).then();
+                                Mono<Void> saveImages = productImageService.createImages(
+                                    savedProduct.getId(),
+                                    dto.getImages().orElse(Collections.emptyList()),
+                                    createdByUser,
+                                    ip
+                                );
 
-                return Mono.when(saveAttributes, saveImages, savePrice)
-                    .then(logAudit(savedProduct.getId(), "POST", savedProduct.getCreatedBy(), "Product created", ip))
-                    .then(findProductWithAdminDetailsById(savedProduct.getId()));
+                                Mono<Void> savePrice = productPriceService.createPrice(
+                                    savedProduct.getId(),
+                                    dto.getPrice(),
+                                    createdByUser,
+                                    ip
+                                ).then();
+
+                                return Mono.when(saveAttributes, saveImages, savePrice)
+                                    .then(logAudit(savedProduct.getId(), "POST", savedProduct.getCreatedBy(), "Product created", ip))
+                                    .then(findProductWithAdminDetailsById(savedProduct.getId()));
+                            });
+                    });
             });
     }
 
     public Mono<FinalProductDetailDTO> updateProductById(Long id, FinalProductCreateDTO dto, String updatedByUser, String ip) {
-        return productRepository.findById(id)
-            .flatMap(existingProduct -> {
-                existingProduct.setName(dto.getProduct().getName());
-                existingProduct.setBrand(dto.getProduct().getBrand());
-                existingProduct.setCategoryId(dto.getProduct().getCategoryId());
-                existingProduct.setSubcategoryId(dto.getProduct().getSubcategoryId());
-                existingProduct.setDescription(dto.getProduct().getDescription());
-                existingProduct.setStock(dto.getProduct().getStock());
-                existingProduct.setStatus(dto.getProduct().getStatus());
-                existingProduct.setModificatedAt(LocalDateTime.now());
-                existingProduct.setModificatedBy(dto.getProduct().getUser());
+        Long categoryId = dto.getProduct().getCategoryId();
+        Long subcategoryId = dto.getProduct().getSubcategoryId();
 
-                return productRepository.save(existingProduct)
-                    .flatMap(savedProduct -> {
-                        Mono<Void> replaceAttributes = productAttributeService.replaceAttributes(
-                            id,
-                            dto.getAttributes().orElse(Collections.emptyList()),
-                            updatedByUser,
-                            ip
-                        );
-                        Mono<Void> replaceImages = productImageService.replaceImages(
-                            id,
-                            dto.getImages().orElse(Collections.emptyList()),
-                            updatedByUser,
-                            ip
-                        );
-                        Mono<Void> replacePrice = productPriceService.updatePrice(
-                            id,
-                            dto.getPrice(),
-                            updatedByUser,
-                            ip
-                        ).then();
+        return categoryRepository.existsById(categoryId)
+            .flatMap(existsCategory -> {
+                if (!existsCategory) {
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The category does not exist"));
+                }
+                return subCategoryRepository.existsById(subcategoryId)
+                    .flatMap(existsSubcategory -> {
+                        if (!existsSubcategory) {
+                            return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The subcategory does not exist"));
+                        }
+                        return productRepository.findById(id)
+                            .flatMap(existingProduct -> {
+                                existingProduct.setName(dto.getProduct().getName());
+                                existingProduct.setBrand(dto.getProduct().getBrand());
+                                existingProduct.setCategoryId(categoryId);
+                                existingProduct.setSubcategoryId(subcategoryId);
+                                existingProduct.setDescription(dto.getProduct().getDescription());
+                                existingProduct.setStock(dto.getProduct().getStock());
+                                existingProduct.setStatus(dto.getProduct().getStatus());
+                                existingProduct.setModificatedAt(LocalDateTime.now());
+                                existingProduct.setModificatedBy(dto.getProduct().getUser());
 
-                        return Mono.when(replaceAttributes, replaceImages, replacePrice)
-                            .then(logAudit(savedProduct.getId(), "PUT", savedProduct.getModificatedBy(), "Update product", ip))
-                            .then(findProductWithAdminDetailsById(id));
+                                return productRepository.save(existingProduct)
+                                    .flatMap(savedProduct -> {
+                                        Mono<Void> replaceAttributes = productAttributeService.replaceAttributes(
+                                            id,
+                                            dto.getAttributes().orElse(Collections.emptyList()),
+                                            updatedByUser,
+                                            ip
+                                        );
+                                        Mono<Void> replaceImages = productImageService.replaceImages(
+                                            id,
+                                            dto.getImages().orElse(Collections.emptyList()),
+                                            updatedByUser,
+                                            ip
+                                        );
+                                        Mono<Void> replacePrice = productPriceService.updatePrice(
+                                            id,
+                                            dto.getPrice(),
+                                            updatedByUser,
+                                            ip
+                                        ).then();
+
+                                        return Mono.when(replaceAttributes, replaceImages, replacePrice)
+                                            .then(logAudit(savedProduct.getId(), "PUT", savedProduct.getModificatedBy(), "Update product", ip))
+                                            .then(findProductWithAdminDetailsById(id));
+                                    });
+                            });
                     });
             });
     }
 
     public Mono<FinalProductDetailDTO> patchProductById(Long id, FinalProductPatchDTO dto, String updatedByUser, String ip) {
-        return productRepository.findById(id)
-            .flatMap(product -> {
-                PatchProductDTO patch = dto.getProduct();
-                if (patch != null) {
-                    if (patch.getName() != null) product.setName(patch.getName());
-                    if (patch.getBrand() != null) product.setBrand(patch.getBrand());
-                    if (patch.getCategoryId() != null) product.setCategoryId(patch.getCategoryId());
-                    if (patch.getSubcategoryId() != null) product.setSubcategoryId(patch.getSubcategoryId());
-                    if (patch.getDescription() != null) product.setDescription(patch.getDescription());
-                    if (patch.getStock() != null) product.setStock(patch.getStock());
-                    if (patch.getStatus() != null) product.setStatus(patch.getStatus());
-                    if (patch.getUser() != null) product.setModificatedBy(patch.getUser());
+        PatchProductDTO patch = dto.getProduct();
+        Long categoryId = (patch != null) ? patch.getCategoryId() : null;
+        Long subcategoryId = (patch != null) ? patch.getSubcategoryId() : null;
+
+        Mono<Boolean> categoryCheck = (categoryId != null)
+            ? categoryRepository.existsById(categoryId)
+            : Mono.just(true);
+
+        Mono<Boolean> subcategoryCheck = (subcategoryId != null)
+            ? subCategoryRepository.existsById(subcategoryId)
+            : Mono.just(true);
+
+        return categoryCheck.flatMap(existsCategory -> {
+            if (!existsCategory) {
+                return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The category does not exist"));
+            }
+            return subcategoryCheck.flatMap(existsSubcategory -> {
+                if (!existsSubcategory) {
+                    return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The subcategory does not exist"));
                 }
-                product.setModificatedAt(LocalDateTime.now());
-
-                return productRepository.save(product)
-                    .flatMap(savedProduct -> {
-                        Mono<Void> patchAttributes = productAttributeService.patchAttributes(
-                            savedProduct.getId(),
-                            dto.getAttributes(),
-                            updatedByUser,
-                            ip
-                        );
-                        Mono<Void> patchImages = productImageService.patchImages(
-                            savedProduct.getId(),
-                            dto.getImages(),
-                            updatedByUser,
-                            ip
-                        );
-                        Mono<Void> patchPrice = Mono.empty();
-                        if (dto.getPrice() != null) {
-                            patchPrice = productPriceService.updatePrice(
-                                savedProduct.getId(),
-                                dto.getPrice(),
-                                updatedByUser,
-                                ip
-                            ).then();
+                return productRepository.findById(id)
+                    .flatMap(product -> {
+                        if (patch != null) {
+                            if (patch.getName() != null) product.setName(patch.getName());
+                            if (patch.getBrand() != null) product.setBrand(patch.getBrand());
+                            if (patch.getCategoryId() != null) product.setCategoryId(patch.getCategoryId());
+                            if (patch.getSubcategoryId() != null) product.setSubcategoryId(patch.getSubcategoryId());
+                            if (patch.getDescription() != null) product.setDescription(patch.getDescription());
+                            if (patch.getStock() != null) product.setStock(patch.getStock());
+                            if (patch.getStatus() != null) product.setStatus(patch.getStatus());
+                            if (patch.getUser() != null) product.setModificatedBy(patch.getUser());
                         }
+                        product.setModificatedAt(LocalDateTime.now());
 
-                        return Mono.when(patchAttributes, patchImages, patchPrice)
-                            .then(logAudit(savedProduct.getId(), "PATCH", savedProduct.getModificatedBy(), "Partial update product", ip))
-                            .then(findProductWithAdminDetailsById(savedProduct.getId()));
+                        return productRepository.save(product)
+                            .flatMap(savedProduct -> {
+                                Mono<Void> patchAttributes = productAttributeService.patchAttributes(
+                                    savedProduct.getId(),
+                                    dto.getAttributes(),
+                                    updatedByUser,
+                                    ip
+                                );
+                                Mono<Void> patchImages = productImageService.patchImages(
+                                    savedProduct.getId(),
+                                    dto.getImages(),
+                                    updatedByUser,
+                                    ip
+                                );
+                                Mono<Void> patchPrice = Mono.empty();
+                                if (dto.getPrice() != null) {
+                                    patchPrice = productPriceService.updatePrice(
+                                        savedProduct.getId(),
+                                        dto.getPrice(),
+                                        updatedByUser,
+                                        ip
+                                    ).then();
+                                }
+
+                                return Mono.when(patchAttributes, patchImages, patchPrice)
+                                    .then(logAudit(savedProduct.getId(), "PATCH", savedProduct.getModificatedBy(), "Partial update product", ip))
+                                    .then(findProductWithAdminDetailsById(savedProduct.getId()));
+                            });
                     });
             });
+        });
     }
 
     public Mono<Boolean> deleteProductById(Long id, String deletedByUser, String ip) {
-    return findProductWithAdminDetailsById(id)
-        .flatMap(productDetail ->
-            logAudit(productDetail.getProduct().getId(), "DELETE", deletedByUser, "Delete product", ip)
-            .then(
-                Mono.when(
-                    productAttributeService.deleteAttributes(id, deletedByUser, ip),
-                    productImageService.deleteImages(id, deletedByUser, ip),
-                    productPriceService.deleteAllPrices(id, deletedByUser, ip)
+        return productRepository.findById(id)
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,"The product does not exist")))
+            .flatMap(product ->
+                logAudit(product.getId(), "DELETE", deletedByUser, "Delete product", ip)
+                .then(
+                    Mono.when(
+                        productAttributeService.deleteAttributes(id, deletedByUser, ip),
+                        productImageService.deleteImages(id, deletedByUser, ip),
+                        productPriceService.deleteAllPrices(id, deletedByUser, ip)
+                    )
+                    .then(productRepository.deleteById(id))
+                    .thenReturn(true)
                 )
-                .then(productRepository.deleteById(id))
-                .thenReturn(true)
-            )
-        );
+            );
     }
 }
