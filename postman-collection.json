@@ -1,0 +1,218 @@
+{
+  "info": {
+    "name": "Product Microservice API",
+    "description": "Coleccion Postman para probar todos los endpoints principales del microservicio de productos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Crear Categoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User", "value": "admin" },
+              { "key": "X-Forwarded-For", "value": "123.123.123.123" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronica\",\n  \"description\": \"Productos electronicos\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8001/categories",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Listar Categorias",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/categories",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Categoria por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/categories/{{categoryId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["categories", "{{categoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Categoria por Nombre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/categories/by-name?name=Electronica",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["categories", "by-name"],
+              "query": [
+                { "key": "name", "value": "Electronica" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subcategorias",
+      "item": [
+        {
+          "name": "Crear Subcategoria",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User", "value": "admin" },
+              { "key": "X-Forwarded-For", "value": "123.123.123.123" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Smartphones\",\n  \"description\": \"Telefonos inteligentes\",\n  \"categoryId\": {{categoryId}}\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8001/subcategories",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["subcategories"]
+            }
+          }
+        },
+        {
+          "name": "Listar Subcategorias por Categoria",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/subcategories?categoryId={{categoryId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["subcategories"],
+              "query": [
+                { "key": "categoryId", "value": "{{categoryId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Subcategoria por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/subcategories/{{subCategoryId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["subcategories", "{{subCategoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Subcategoria por Nombre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/subcategories/by-name/Smartphones",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["subcategories", "by-name", "Smartphones"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "Crear Producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User", "value": "admin" },
+              { "key": "X-Forwarded-For", "value": "123.123.123.123" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product\": {\n    \"name\": \"iPhone 15\",\n    \"brand\": \"Apple\",\n    \"categoryId\": {{categoryId}},\n    \"subcategoryId\": {{subCategoryId}},\n    \"description\": \"Ultimo modelo de iPhone\",\n    \"stock\": 50,\n    \"status\": \"active\",\n    \"user\": \"admin\"\n  },\n  \"images\": [\n    { \"urlImg\": \"https://example.com/iphone15.jpg\", \"priority\": 1 }\n  ],\n  \"attributes\": [\n    { \"attributeName\": \"Color\", \"attributeValue\": \"Negro\" },\n    { \"attributeName\": \"Almacenamiento\", \"attributeValue\": \"256GB\" }\n  ],\n  \"price\": {\n    \"price\": 1200.00,\n    \"priceCurrency\": \"USD\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8001/products/admin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["products", "admin"]
+            }
+          }
+        },
+        {
+          "name": "Listar Productos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/products",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Producto por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/products/{{productId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["products", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Producto por Nombre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8001/products/by-name/iPhone 15",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8001",
+              "path": ["products", "by-name", "iPhone 15"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "categoryId", "value": "1" },
+    { "key": "subCategoryId", "value": "1" },
+    { "key": "productId", "value": "1" }
+  ]
+}

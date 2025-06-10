@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: "1"
+      author: "Ghost"
+      changes:
+        - sqlFile:
+            path: "db/changelog/01-create-tables.sql"
+            relativeToChangelogFile: false
+  - changeSet:
+      id: "2"
+      author: "Ghost"
+      changes:
+        - sqlFile:
+            path: "db/changelog/cleanAndSetupData.sql"
+            relativeToChangelogFile: false
