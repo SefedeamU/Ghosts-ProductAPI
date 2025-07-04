@@ -1,99 +1,147 @@
-# Microservicio Orquestador y API Gateway (NestJS)
+Product Microservice - Microservicio de Gestión de Productos para E-commerce
+![alt text](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
+![alt text](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![alt text](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![alt text](https://img.shields.io/badge/Liquibase-2962FF?style=for-the-badge&logo=liquibase&logoColor=white)
+![alt text](https://img.shields.io/badge/Testcontainers-262261?style=for-the-badge&logo=testcontainers&logoColor=white)
+![alt text](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![alt text](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)
 
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+🎯 Descripción y Objetivo
+Este proyecto forma parte de una serie de microservicios orientados a construir una aplicación completa de e-commerce. Previamente, se desarrolló y publicó el microservicio de autenticación; ahora es el turno del microservicio encargado de la gestión de productos. Este servicio permite el registro, consulta y administración de productos, así como la gestión de categorías y subcategorías a las que pueden pertenecer. Además, incorpora un sistema de auditoría para registrar acciones sensibles realizadas por administradores, validación de datos y manejo centralizado de excepciones para una gestión robusta de errores.
 
-Este proyecto es un **API Gateway y Orquestador de microservicios** desarrollado con **NestJS** y **TypeScript**. Actúa como el punto de entrada único para una arquitectura de e-commerce, gestionando la comunicación entre los diferentes servicios backend y aplicando una capa de seguridad centralizada.
+Todo el proyecto está diseñado bajo el paradigma de la reactividad usando Spring WebFlux, permitiendo procesar múltiples peticiones en paralelo y garantizando alta escalabilidad y rendimiento.
 
-Este servicio es una pieza clave dentro de una suite de microservicios que incluye:
-*   [Microservicio de Productos (Java & Spring WebFlux)](https://github.com/tu-usuario/repo-productos)
-*   [Microservicio de Autenticación (Python & FastAPI)](https://github.com/tu-usuario/repo-autenticacion)
-*   _(Opcional: Enlace al microservicio de facturación)_
+El microservicio incluye una suite de pruebas de integración que cubre todos los aspectos críticos del sistema, utilizando TestContainers y Docker para garantizar entornos de prueba aislados y reproducibles.
 
----
+📊 Visualización de la Arquitectura
+(Sugerencia: Puedes añadir aquí diagramas para una mejor comprensión visual)
 
-## 🎯 Rol y Responsabilidades del Servicio
+Diagrama de Arquitectura del Microservicio
+[Aquí puedes insertar un diagrama que muestre la interacción entre WebFlux, R2DBC y la base de datos]
 
-El objetivo de este microservicio es doble:
+Diagrama Entidad-Relación
+[Aquí puedes insertar un diagrama visual del modelo de datos]
 
-1.  **Orquestador:** Centraliza y simplifica las operaciones que requieren la colaboración de múltiples servicios. Por ejemplo, al crear una factura, este servicio se comunica internamente con el microservicio de usuarios y el de productos para obtener la información necesaria.
-2.  **API Gateway:** Actúa como una fachada única para el frontend u otros clientes, ocultando la complejidad de la arquitectura distribuida. Es responsable de:
-    *   **Enrutamiento Inteligente:** Dirigir las peticiones entrantes al microservicio correcto.
-    *   **Seguridad Centralizada:** Aplicar políticas de autenticación y autorización.
-    *   **Manejo de Errores Unificado:** Capturar y transformar errores de los servicios internos en respuestas consistentes para el cliente.
+🛠️ Principales Dependencias
+A continuación, se destacan las principales dependencias utilizadas de la caja de herramientas que tiene Spring:
 
----
+Spring Boot: Framework principal para el desarrollo de aplicaciones Java modernas, facilita la configuración y despliegue de microservicios.
 
-## ✨ Características Principales
+Spring WebFlux: Permite construir APIs reactivas y no bloqueantes, ideales para aplicaciones que requieren alta concurrencia y escalabilidad.
 
-*   **Arquitectura Modular con NestJS:** El código está organizado en módulos de dominio (facturas, usuarios, productos) para una máxima mantenibilidad y escalabilidad.
-*   **Seguridad Robusta con Guards:** Se utilizan **Guards de NestJS** para implementar una lógica de autorización centralizada, protegiendo rutas críticas basadas en roles de usuario (`user`/`admin`) y en la propiedad de los recursos.
-*   **Contenerización con Docker:** La aplicación está completamente contenerizada, y se utilizan **redes de Docker** para gestionar una comunicación segura y eficiente entre los microservicios en un entorno aislado.
-*   **Manejo de Errores Resiliente:** Diseñado para capturar fallos de los servicios subyacentes y devolver respuestas de error HTTP claras y estandarizadas, mejorando la robustez del sistema.
-*   **Contratos de Datos (DTOs):** Uso de Data Transfer Objects (DTOs) con `class-validator` y `class-transformer` para garantizar la integridad y validación de los datos en todas las peticiones.
-*   **Calidad de Código:** Configurado con ESLint y Prettier para asegurar un estilo de código consistente y limpio.
+Spring Data R2DBC: Integración reactiva con bases de datos relacionales, permitiendo operaciones asíncronas sobre PostgreSQL.
 
----
+Liquibase: Herramienta de versionado y migración de esquemas de base de datos, asegurando consistencia y trazabilidad en los cambios.
 
-## 🛠️ Stack Tecnológico
+TestContainers: Permite ejecutar pruebas de integración utilizando contenedores Docker efímeros, garantizando entornos limpios y realistas para cada ejecución de test.
 
-*   **Framework:** NestJS
-*   **Lenguaje:** TypeScript
-*   **Entorno de Ejecución:** Node.js
-*   **Contenerización:** Docker & Docker Compose
-*   **Herramientas de Testing API:** Postman
+JUnit 5: Framework de pruebas unitarias y de integración.
 
----
+Lombok: Reduce el código boilerplate en las entidades y servicios, facilitando la mantenibilidad.
 
-## 🚀 Cómo Ejecutar el Proyecto
+Spring Boot Actuator: Provee endpoints para monitoreo y gestión del microservicio en producción.
 
-Para levantar este microservicio, es necesario tener los otros servicios de la arquitectura corriendo en la misma red de Docker.
+SpringDoc OpenAPI: Genera documentación interactiva de la API REST automáticamente.
 
-### Requisitos Previos
+🧬 Modelo de Datos y Relaciones
+Entidades
+Las entidades principales del microservicio son:
 
-*   [Docker](https://www.docker.com/get-started) y [Docker Compose](https://docs.docker.com/compose/install/) instalados.
-*   Los microservicios de `usuarios` y `productos` deben estar ejecutándose.
-*   Una red de Docker compartida creada. Si no existe, puedes crearla con:
-    ```sh
-    docker network create mi-red-ecommerce
-    ```
+Product: Representa un producto del catálogo.
 
-### Pasos para el Despliegue
+Category: Categoría a la que pertenece un producto.
 
-1.  **Clona el repositorio:**
-    ```sh
-    git clone https://github.com/tu-usuario/repo-orquestador.git
-    cd repo-orquestador
-    ```
+SubCategory: Subcategoría asociada a una categoría.
 
-2.  **Configura las variables de entorno:**
-    Crea un archivo `.env` en la raíz del proyecto a partir del archivo `.env.example`. Este archivo debe contener las URLs de los otros microservicios.
-    ```env
-    # .env
-    PORT=3000
-    USERS_API_URL=http://servicio-usuarios:8001
-    PRODUCTS_API_URL=http://servicio-productos:8002
-    ```
-    *Nota: Los nombres de host (`servicio-usuarios`, `servicio-productos`) deben coincidir con los nombres de los servicios definidos en los archivos `docker-compose.yml` de los otros proyectos.*
+ProductPrice: Gestiona tanto el precio vigente de un producto como el historial de todos los precios previos, marcando claramente aquellos que han quedado obsoletos.
 
-3.  **Construye y levanta el contenedor:**
-    Asegúrate de que tu `docker-compose.yml` conecte este servicio a la red compartida.
-    ```sh
-    docker-compose up --build -d
-    ```
+ProductAttribute: Atributos personalizados de un producto.
 
-4.  **¡Listo!**
-    El API Gateway estará disponible en `http://localhost:3000`.
+ProductAudit: Registro de auditoría de acciones sensibles.
 
----
+Relaciones
+Un Product pertenece a una Category y a una SubCategory.
 
-## 📄 Colección de Postman
+Un Product puede tener múltiples ProductPrice, ProductImage y ProductAttribute.
 
-Para facilitar las pruebas y la interacción con la API, se incluye una colección de Postman en el repositorio.
+ProductAudit registra acciones sobre productos, categorías y subcategorías, asociando cada registro con los identificadores correspondientes.
 
-*   Puedes importar el archivo `[nombre-de-tu-coleccion].postman_collection.json` directamente en Postman para tener acceso a todos los endpoints preconfigurados.
+🏛️ Centralización de la Lógica en el Controlador de Productos
+En lugar de fragmentar la lógica en múltiples controladores para cada entidad relacionada, se decidió centralizar la lógica de gestión de productos en un solo controlador. Esto permite abstraer la complejidad interna y ofrecer una API más sencilla y coherente para los consumidores. Así, las operaciones sobre productos, junto con sus precios, imágenes y atributos, se gestionan desde un único punto de entrada, facilitando la integración y reduciendo la complejidad para los desarrolladores que consumen la API.
 
----
+⚙️ Variables de Entorno (.env)
+El archivo .env permite definir de manera sencilla y centralizada las variables de entorno necesarias para la configuración del microservicio y su base de datos. Las variables principales son:
 
-## ✍️ Autor
+SPRING_API_PORT: Puerto en el que se expone la API del microservicio.
 
-*   **Sergio Delgado Amado** - [SefedeamU](https://github.com/SefedeamU)
+DB_HOST: Host de la base de datos (Si planeas despliegar la API y la base de datos en una misma red de docker recuerda que esta variable coincida con el nombre del servicio de la base de datos en docker-compose.yml).
+
+DB_PORT: Puerto de la base de datos.
+
+DB_NAME: Nombre de la base de datos.
+
+DB_USER: Usuario de la base de datos.
+
+DB_PASS: Contraseña de la base de datos.
+
+Utilidad:
+Al definir estas variables, puedes cambiar fácilmente la configuración del entorno (desarrollo, pruebas, producción) sin modificar el código fuente. El microservicio y la base de datos se configuran automáticamente leyendo estos valores, facilitando el despliegue y la portabilidad.
+
+📦 Compilación y Empaquetado
+Requisitos Previos
+Java 21 instalado.
+
+Maven instalado.
+
+Docker y Docker Compose instalados (para pruebas y despliegue).
+
+Pasos
+Compila y Empaqueta el proyecto:
+
+Generated sh
+mvn clean package
+Use code with caution.
+Sh
+Esto generará un archivo JAR en la carpeta target/.
+
+✅ Ejecución de Pruebas
+Requisitos
+Docker debe estar corriendo (para TestContainers).
+
+Las variables de entorno de test están configuradas (por defecto, el proyecto ya está preparado para esto).
+
+Ejecución
+Las pruebas de integración deben ejecutarse en un orden específico para garantizar la consistencia de los datos y la correcta inicialización de los contenedores. Para ello, utiliza la suite de test RunAllIntegrationTests:
+
+Generated sh
+mvn test -Dtest=RunAllIntegrationTests
+Use code with caution.
+Sh
+O asegúrate de ejecutar los tests a partir del archivo RunAllIntegrationTests.java, que agrupa y ordena todas las pruebas de integración relevantes.
+
+🐳 Dockerización del Proyecto
+Requisitos Previos
+Docker y Docker Compose instalados.
+
+Archivo .env correctamente configurado con las variables necesarias.
+
+Pasos
+Compila y empaqueta el proyecto (ver sección anterior).
+
+Construye la imagen Docker del microservicio:
+
+Generated sh
+docker-compose build
+Use code with caution.
+Sh
+Levanta los servicios (microservicio y base de datos):
+
+Generated sh
+docker-compose up
+Use code with caution.
+Sh
+Esto iniciará tanto la base de datos PostgreSQL como el microservicio, usando las variables definidas en .env.
+
+📝 Resumen
+Este microservicio es una pieza clave para la gestión de productos en una arquitectura de e-commerce basada en microservicios. Está preparado para escalar, es fácil de configurar y mantener, y cuenta con una suite de pruebas robusta y automatizada. Su diseño reactivo y su integración con herramientas modernas del ecosistema Java lo hacen ideal para proyectos profesionales y de alto rendimiento.
